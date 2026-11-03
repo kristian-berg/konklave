@@ -1,0 +1,2247 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Browserspiel: Als Kardinaldekan leiten Sie im März 2069 das Konklave nach den Regeln von Universi Dominici Gregis.">
+<title>Konklave 2069</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400;0,500;0,700;1,400;1,500&family=Alegreya+Sans+SC:wght@500;700&family=IM+Fell+Great+Primer+SC&family=Homemade+Apple&family=La+Belle+Aurore&family=Nothing+You+Could+Do&family=Reenie+Beanie&display=swap">
+<style>
+/* Layout: Grundriss als Pergamentbogen oben, darunter der Schreibtisch des Dekans (Aufgaben, Stimmenlage, Chronik); Zeremonien als Fresko-Vollbild. */
+:root{
+  --night:#17120f; --panel:#211a15; --panel2:#2a211a; --line:#46382c; --text:#ecdfc6; --muted:#b4a288;
+  --parch:#efe5cf; --parch2:#e2d3b3; --ink:#2f251c; --ink2:#6b5a47;
+  --red:#a3262a; --redL:#c94a40; --gold:#c99b45; --goldL:#e3c27c; --lapis:#3a5d8a; --ok:#6f8f4e; --bad:#b4483c;
+  --display:"IM Fell Great Primer SC", "Iowan Old Style", Georgia, serif;
+  --body:"Alegreya", "Iowan Old Style", Georgia, serif;
+  --label:"Alegreya Sans SC", "Gill Sans", "Trebuchet MS", sans-serif;
+  color-scheme: dark;
+}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0}
+body{background:var(--night); color:var(--text); font-family:var(--body); font-size:16px; line-height:1.5; -webkit-font-smoothing:antialiased}
+button{font:inherit; color:inherit; cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--goldL); outline-offset:2px}
+h1,h2,h3{font-weight:400; margin:0; text-wrap:balance}
+.lbl{font-family:var(--label); font-size:12.5px; letter-spacing:.08em; text-transform:lowercase}
+#app{min-height:100%; display:flex; flex-direction:column}
+.wrap{padding-left:max(16px, env(safe-area-inset-left,0px)); padding-right:max(16px, env(safe-area-inset-right,0px))}
+
+/* Kopfleiste */
+.bar{display:flex; flex-wrap:wrap; align-items:center; gap:10px 18px; padding-block:10px; border-bottom:1px solid var(--line); background:var(--panel)}
+.brand{font-family:var(--display); font-size:22px; letter-spacing:.04em; color:var(--goldL); white-space:nowrap}
+.brand small{font-family:var(--label); font-size:12px; color:var(--muted); letter-spacing:.14em; margin-left:6px}
+.status{display:flex; flex-wrap:wrap; gap:4px 14px; align-items:baseline; flex:1; min-width:220px}
+.status .date{font-family:var(--label); letter-spacing:.06em; color:var(--muted); font-size:13px; font-variant-numeric:tabular-nums}
+.status .phase{font-size:17px; font-style:italic}
+.status .bnum{font-family:var(--label); font-size:13px; color:var(--goldL); letter-spacing:.06em}
+.ctrls{display:flex; flex-wrap:wrap; gap:6px; align-items:center}
+.btn{background:transparent; border:1px solid var(--line); border-radius:3px; padding:5px 11px; font-family:var(--label); font-size:13px; letter-spacing:.05em; color:var(--text)}
+.btn:hover{border-color:var(--gold); color:var(--goldL)}
+.btn[aria-pressed="true"]{background:var(--panel2); border-color:var(--gold); color:var(--goldL)}
+.btn-gold{border-color:var(--gold); color:var(--goldL); background:#2e2416}
+.btn-gold:hover{background:#3a2d19}
+.btn:disabled{opacity:.45; cursor:not-allowed}
+.seg{display:inline-flex; border:1px solid var(--line); border-radius:3px; overflow:hidden}
+.seg .btn{border:0; border-radius:0}
+.seg .btn+.btn{border-left:1px solid var(--line)}
+
+/* Bühne: Grundriss */
+#stage{position:relative; background:#ece2cb; border-bottom:1px solid var(--line); overflow:hidden}
+#plan{display:block; width:100%; touch-action:manipulation; cursor:default}
+#tip{position:absolute; pointer-events:none; background:var(--parch); color:var(--ink); border:1px solid var(--ink2); padding:6px 9px; font-size:13.5px; line-height:1.35; max-width:260px; box-shadow:2px 3px 0 rgba(47,37,28,.25)}
+#tip b{font-weight:500}
+#tip .o{color:var(--ink2); font-size:12.5px}
+#subs{position:absolute; left:50%; bottom:10px; transform:translateX(-50%); width:min(92%,880px); text-align:center; pointer-events:none}
+#subs p{margin:0}
+#subs .lat{display:inline; font-style:italic; font-size:clamp(15px,2vw,20px); color:#f7efdc; background:rgba(28,21,16,.82); padding:2px 10px; box-decoration-break:clone; -webkit-box-decoration-break:clone; line-height:1.6}
+#subs .de{margin-top:4px}
+#subs .de span{font-size:13.5px; color:#e1d3b5; background:rgba(28,21,16,.72); padding:1px 8px}
+#legend{position:absolute; right:10px; top:8px; display:flex; gap:12px; font-family:var(--label); font-size:12px; color:var(--ink2); letter-spacing:.04em; background:rgba(236,226,203,.86); padding:3px 8px}
+#legend i{display:inline-block; width:10px; height:10px; border-radius:50%; vertical-align:-1px; margin-right:4px}
+.togglePap{display:flex; align-items:center; gap:4px; cursor:pointer}
+
+/* Schreibtisch */
+#desk{display:grid; grid-template-columns:minmax(0,1.25fr) minmax(0,1fr) minmax(0,1fr); gap:14px; padding-block:14px; flex:1; align-items:start}
+.panel h2,.sheet h2{font-family:var(--display); font-size:19px; letter-spacing:.03em; margin-bottom:8px}
+.panel{min-width:0}
+.panel h2{color:var(--goldL)}
+.sheet{background:var(--parch); color:var(--ink); padding:14px 16px 16px; border-radius:2px; box-shadow:0 1px 0 #fff3 inset, 3px 4px 0 rgba(0,0,0,.35); min-width:0}
+.sheet h2{color:var(--ink)}
+#taskList{display:flex; flex-direction:column; gap:10px}
+.task{border:1px solid var(--parch2); border-left:4px solid var(--red); padding:9px 11px 11px; background:#f6efdf; transition:opacity .6s, transform .6s}
+.task.done{opacity:0; transform:translateX(12px)}
+.task .t-head{display:flex; justify-content:space-between; gap:8px; align-items:baseline}
+.task .t-title{font-weight:500; font-size:16.5px}
+.ref{font-family:var(--label); font-size:11.5px; letter-spacing:.06em; color:var(--ink2); white-space:nowrap}
+.task p{margin:4px 0 8px; font-size:14.5px; color:#4a3c2e; line-height:1.45}
+.t-btn{background:var(--red); color:#fff7ea; border:0; border-radius:2px; padding:6px 12px; font-family:var(--label); font-size:13.5px; letter-spacing:.05em}
+.t-btn:hover{background:var(--redL)}
+.t-btn.alt{background:transparent; color:var(--ink); border:1px solid var(--ink2)}
+.idle{font-style:italic; color:var(--ink2); font-size:14.5px; margin:0}
+#info{margin-top:12px}
+.card-c{border-top:1px solid var(--parch2); padding-top:10px; font-size:14.5px}
+.card-c .nm{font-size:17px; font-weight:500}
+.card-c .meta{color:var(--ink2); font-size:13.5px}
+.card-c p{margin:6px 0}
+#stand{display:flex; flex-direction:column; gap:7px}
+.bar-row{display:grid; grid-template-columns:minmax(0,7.5em) 1fr 2.4em; gap:8px; align-items:center; font-size:14.5px}
+.bar-row .n{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.bar-row .v{text-align:right; font-variant-numeric:tabular-nums; font-family:var(--label)}
+.track{position:relative; height:12px; background:#2f261f; border-radius:1px}
+.fill{position:absolute; left:0; top:0; bottom:0; background:var(--red)}
+.fill.berg{background:var(--red)}
+.need{position:absolute; top:-3px; bottom:-3px; width:2px; background:var(--goldL)}
+.delta{font-size:11.5px; font-family:var(--label); color:var(--muted)}
+.stand-note{font-size:13.5px; color:var(--muted); margin:6px 0 0}
+.meters{display:flex; gap:14px; margin-top:12px; flex-wrap:wrap}
+.meter{font-family:var(--label); font-size:12.5px; color:var(--muted); letter-spacing:.05em}
+.meter b{display:block; font-family:var(--body); font-size:20px; color:var(--text); font-weight:500; letter-spacing:0}
+#log{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px; max-height:300px; overflow:auto; font-size:14px}
+#log li{border-left:2px solid var(--line); padding-left:9px; color:#d9cbb0}
+#log li time{font-family:var(--label); font-size:11.5px; color:var(--muted); margin-right:6px; letter-spacing:.05em}
+#log li.k-dec{border-color:var(--gold)}
+#log li.k-bad{border-color:var(--bad)}
+#log li.k-res{border-color:var(--red)}
+
+/* Skrutinium */
+#scrut{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.1fr); gap:16px; padding-block:14px; flex:1; align-items:start}
+.scr-head h2{font-family:var(--display); color:var(--goldL); font-size:20px}
+.scr-head p{margin:4px 0 0; color:var(--muted); font-size:14.5px}
+#ballotArea{min-height:210px; display:flex; align-items:center; justify-content:center; gap:14px; padding:18px 0; position:relative}
+.ballot{width:min(290px,80vw); aspect-ratio:1.55; background:#fbf7ec; color:#1f2a44; border:1px solid #cdbf9f; box-shadow:3px 4px 0 rgba(0,0,0,.35); position:relative; padding:14px 16px; transition:transform .25s, opacity .25s}
+.ballot .b-print{font-family:var(--body); font-size:13.5px; color:#3b3226; text-align:center; letter-spacing:.02em}
+.ballot .b-line{border-bottom:1px solid #8a7b62; margin:44px 6px 0}
+.ballot .b-name{position:absolute; left:0; right:0; top:44%; text-align:center; font-size:28px; color:#1f2d55; white-space:nowrap}
+.ballot.pierce::after{content:""; position:absolute; left:50%; top:16px; width:7px; height:7px; border-radius:50%; background:#5a4a35; transform:translateX(-50%)}
+.ballot.flip{transform:translateY(-14px) rotate(-3deg); opacity:0}
+.ballot.err{box-shadow:0 0 0 3px var(--bad), 3px 4px 0 rgba(0,0,0,.35)}
+.scr-meta{display:flex; flex-wrap:wrap; gap:8px; align-items:center}
+.scr-meta .count{font-family:var(--label); font-size:15px; letter-spacing:.05em; font-variant-numeric:tabular-nums; margin-right:auto}
+#scrMsg{min-height:2.6em; margin-top:8px; font-size:14.5px; color:var(--goldL)}
+.dbl-actions{display:flex; flex-direction:column; gap:8px}
+#tallyRows{list-style:none; margin:0; padding:0; display:flex; flex-direction:column}
+#tallyRows li{display:grid; grid-template-columns:1.6em minmax(0,9em) 1fr 2.2em; gap:8px; align-items:center; padding:6px 4px; border-bottom:1px dotted #c5b493; cursor:pointer; user-select:none}
+#tallyRows li:hover{background:#f7f0de}
+#tallyRows li.hit{background:#f2e3c0}
+#tallyRows .k{font-family:var(--label); font-size:12px; color:var(--ink2); border:1px solid #c5b493; text-align:center; border-radius:2px}
+#tallyRows .nm{font-size:15px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+#tallyRows .cnt{text-align:right; font-family:var(--label); font-variant-numeric:tabular-nums}
+#tallyRows svg{display:block; height:18px}
+.more{margin-top:12px; position:relative}
+.more label{font-family:var(--label); font-size:12.5px; letter-spacing:.06em; color:var(--ink2); display:block; margin-bottom:4px}
+.more input{width:100%; background:#fbf7ec; border:1px solid #bba985; padding:6px 8px; font:inherit; color:var(--ink); border-radius:2px}
+#nameHits{list-style:none; margin:4px 0 0; padding:0; max-height:160px; overflow:auto}
+#nameHits li{padding:4px 8px; cursor:pointer; font-size:14.5px; border-bottom:1px solid #e3d6b8}
+#nameHits li:hover,#nameHits li:focus{background:#f0e3c5; outline:none}
+.res-table{width:100%; border-collapse:collapse; font-size:15px; margin-top:6px}
+.res-table td{color:var(--ink); padding:4px 6px; border-bottom:1px dotted #c5b493}
+.res-table td.v{text-align:right; font-variant-numeric:tabular-nums; font-family:var(--label)}
+
+/* Modale Dialoge */
+.overlay{position:fixed; inset:0; z-index:40; background:rgba(12,9,7,.72); display:flex; align-items:center; justify-content:center; padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.dialog{background:var(--parch); color:var(--ink); width:min(640px,100%); max-height:100%; overflow:auto; padding:22px 24px; border-radius:2px; box-shadow:6px 8px 0 rgba(0,0,0,.45); position:relative}
+.dialog .kicker{font-family:var(--label); font-size:12.5px; letter-spacing:.12em; color:var(--red)}
+.dialog h3{font-family:var(--display); font-size:25px; margin:2px 0 10px; line-height:1.2}
+.dialog .body{font-size:16px; line-height:1.55; max-width:62ch}
+.dialog .body p{margin:0 0 10px}
+.dialog .ref{display:block; margin-top:4px}
+.opts{display:flex; flex-direction:column; gap:8px; margin-top:14px}
+.opt{text-align:left; background:#f8f2e4; border:1px solid #c9b791; border-radius:2px; padding:10px 12px; color:var(--ink)}
+.opt:hover{border-color:var(--red); background:#fbf6ea}
+.opt b{display:block; font-weight:500; font-size:16px}
+.opt span{font-size:14px; color:var(--ink2)}
+.dialog .close{position:absolute; right:10px; top:8px; background:none; border:0; font-size:24px; color:var(--ink2); line-height:1}
+.dialog.wide{width:min(980px,100%)}
+.talk{display:grid; grid-template-columns:minmax(0,15em) minmax(0,1fr); gap:18px}
+.cand-list{display:flex; flex-direction:column; gap:4px}
+.cand{display:grid; grid-template-columns:1fr auto; gap:4px; text-align:left; background:transparent; border:1px solid transparent; border-bottom:1px dotted #c5b493; padding:6px 8px; color:var(--ink)}
+.cand:hover,.cand[aria-current="true"]{background:#f6eedb; border-color:#c9b791}
+.cand .s{grid-column:1/-1; font-size:12.5px; color:var(--ink2); font-family:var(--label); letter-spacing:.04em}
+.cand .v{font-family:var(--label); font-variant-numeric:tabular-nums}
+.pill{font-family:var(--label); font-size:11.5px; letter-spacing:.06em; padding:1px 7px; border-radius:2px; background:#e6d8b8; color:var(--ink)}
+.pill.out{background:#d7d0c4; color:#5b5246}
+.pill.wav{background:#efd9a4}
+.talk-main .who{display:flex; gap:14px; align-items:center}
+.portrait{width:64px; height:64px; flex:none}
+.talk-main .quote{font-style:italic; font-size:16.5px; border-left:3px solid var(--red); padding:4px 0 4px 12px; margin:12px 0}
+.approach{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:8px}
+.approach .opt.illicit{border-style:dashed}
+.rules{display:flex; flex-direction:column; gap:10px; font-size:15px}
+.rules div{border-bottom:1px dotted #c5b493; padding-bottom:8px}
+.rules b{font-weight:500}
+
+/* Fresko-Szenen */
+#scene{position:fixed; inset:0; z-index:30; background:#0f0c0a; display:flex; flex-direction:column}
+#scene .art{position:relative; flex:1; min-height:0; overflow:hidden}
+#scene .art svg{position:absolute; inset:0; width:100%; height:100%}
+#scene .card{background:linear-gradient(#0f0c0a00, #0f0c0a 30%); margin-top:-110px; position:relative; padding-block:26px 18px; padding-bottom:max(18px, env(safe-area-inset-bottom,0px))}
+#scene .card-in{max-width:880px; margin:0 auto}
+#scene .kick{font-family:var(--label); letter-spacing:.14em; font-size:12.5px; color:var(--goldL)}
+#scene .ttl{font-family:var(--display); font-size:clamp(24px,3.6vw,38px); line-height:1.15; margin:2px 0 8px; color:#f6ecd6}
+#scene .txt{font-size:17px; line-height:1.55; color:#e7dac0; max-width:66ch; margin:0}
+#scene .lat{font-style:italic; font-size:clamp(18px,2.4vw,24px); color:#fbf2dc; margin:10px 0 0}
+#scene .de{font-size:15px; color:#cdbd9e; margin:2px 0 0}
+#scene .sc-ctrl{display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; align-items:center}
+#scene .sc-ctrl .t-btn{font-size:14px; padding:8px 16px}
+#scene .choices{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:8px; margin-top:12px}
+#scene .choices .opt{background:#2a211a; border-color:#5a4836; color:var(--text)}
+#scene .choices .opt span{color:var(--muted)}
+#scene .choices .opt:hover{border-color:var(--gold)}
+.flame{animation:flick 1.6s infinite alternate}
+@keyframes flick{0%{transform:scaleY(1)}50%{transform:scaleY(.82) translateY(1px)}100%{transform:scaleY(1.06)}}
+.flag{animation:wave 2.4s ease-in-out infinite alternate; transform-box:fill-box; transform-origin:0 100%}
+@keyframes wave{to{transform:rotate(-6deg)}}
+.leaf{transition:transform 2.6s cubic-bezier(.5,0,.3,1)}
+.doors-open #leafL{transform:scaleX(.12)} .doors-open #leafR{transform:scaleX(.12)}
+.fade-in{transition:opacity 1.6s}
+
+/* Titelbild */
+#title{position:fixed; inset:0; z-index:50; background:#0f0c0a; display:flex; flex-direction:column}
+#title .art{position:relative; flex:1; min-height:0; overflow:hidden}
+#title .art svg{position:absolute; inset:0; width:100%; height:100%}
+#title .card{margin-top:-180px; position:relative; background:linear-gradient(#0f0c0a00,#0f0c0a 35%); padding-block:40px 24px; padding-bottom:max(24px,env(safe-area-inset-bottom,0px))}
+#title .card-in{max-width:880px; margin:0 auto}
+#title h1{font-family:var(--display); font-size:clamp(46px,8vw,96px); line-height:.95; color:#f6ecd6; letter-spacing:.02em}
+#title .sub{font-family:var(--label); letter-spacing:.18em; color:var(--goldL); font-size:13px; margin-top:8px}
+#title p{max-width:62ch; color:#e1d3b6; font-size:16.5px}
+#title .row{display:flex; flex-wrap:wrap; gap:10px; align-items:end; margin-top:14px}
+#title label{font-family:var(--label); font-size:12.5px; letter-spacing:.08em; color:var(--muted); display:block; margin-bottom:4px}
+#title input{background:#1d1712; border:1px solid var(--line); color:var(--text); padding:8px 10px; font:inherit; min-width:min(260px,100%); border-radius:2px}
+#title .small{font-size:13.5px; color:var(--muted); margin-top:12px}
+#title .t-btn{font-size:15px; padding:10px 18px}
+
+/* Epilog */
+.epi h3{margin-bottom:6px}
+.epi table{width:100%; border-collapse:collapse; font-size:14.5px; margin:10px 0}
+.epi td{color:var(--ink); padding:6px 6px; border-bottom:1px dotted #c5b493; vertical-align:top}
+.epi .okk{color:var(--ok); font-family:var(--label); white-space:nowrap}
+.epi .bad{color:var(--bad); font-family:var(--label); white-space:nowrap}
+
+@media (max-width:900px){
+  #desk{grid-template-columns:minmax(0,1fr)}
+  #scrut{grid-template-columns:minmax(0,1fr)}
+  .talk{grid-template-columns:minmax(0,1fr)}
+  #legend{display:none}
+  .status{order:3; flex-basis:100%}
+}
+@media (prefers-reduced-motion: reduce){ .flame,.flag{animation:none} .leaf,.task,.ballot{transition:none} }
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="bar wrap">
+    <div class="brand">Konklave<small>MMLXIX</small></div>
+    <div class="status"><span class="date" id="stDate">Vatikanstadt</span><span class="phase" id="stPhase">Sede vacante</span><span class="bnum" id="stBallot"></span></div>
+    <div class="ctrls">
+      <button class="btn btn-gold" id="btnTalk" type="button">Hintergrundgespräch</button>
+      <div class="seg" role="group" aria-label="Tempo">
+        <button class="btn" data-speed="1" type="button">ruhig</button><button class="btn" data-speed="3" type="button" aria-pressed="true">normal</button><button class="btn" data-speed="8" type="button">zügig</button>
+      </div>
+      <button class="btn" id="btnSkip" type="button" title="Laufende Bewegungen beschleunigen">Vorspulen</button>
+      <button class="btn" id="btnRules" type="button">Regelwerk</button>
+      <button class="btn" id="btnSound" type="button" aria-pressed="false">Ton aus</button>
+    </div>
+  </header>
+
+  <section id="stage" aria-label="Grundriss">
+    <canvas id="plan"></canvas>
+    <div id="tip" hidden></div>
+    <div id="legend"><span><i style="background:#a3262a"></i>Kardinal</span><span><i style="background:#a3262a;box-shadow:0 0 0 2px #c18f32"></i>Sie</span><label class="togglePap"><input type="checkbox" id="papToggle" checked> Papabili</label><span><i style="background:#40304f"></i>Zeremonienmeister</span></div>
+    <div id="subs" aria-live="polite"><p class="lat-wrap"><span class="lat" hidden></span></p><p class="de"><span hidden></span></p></div>
+  </section>
+
+  <main id="desk" class="wrap">
+    <section class="sheet" id="tasks"><h2>Aufgaben</h2><div id="taskList"></div><div id="info"></div></section>
+    <section class="panel" id="standings"><h2>Stimmenlage</h2><div id="stand"><p class="stand-note">Noch kein Wahlgang. Zur Wahl sind zwei Drittel der anwesenden Wähler nötig.</p></div>
+      <div class="meters"><div class="meter">Autorität im Kollegium<b id="mAuth">60</b></div><div class="meter">Wähler anwesend<b id="mPresent">–</b></div><div class="meter">Nötige Mehrheit<b id="mNeed">–</b></div></div>
+    </section>
+    <section class="panel" id="chron"><h2>Chronik</h2><ol id="log"></ol></section>
+  </main>
+
+  <section id="scrut" class="wrap" hidden>
+    <div>
+      <div class="scr-head"><h2 id="scrTitle">Skrutinium</h2><p id="scrHint">Sie sind dritter Skrutator. Lesen Sie jeden Namen vor und führen Sie die Strichliste.</p></div>
+      <div id="ballotArea"></div>
+      <div class="scr-meta"><span class="count" id="scrCount">–</span><button class="btn" id="scrUndo" type="button">Letzten Strich löschen</button><button class="btn" id="scrAuto" type="button">Rest automatisch auszählen</button></div>
+      <div id="scrMsg" aria-live="polite"></div>
+    </div>
+    <div class="sheet">
+      <h2 id="sheetTitle">Ihre Strichliste</h2>
+      <ol id="tallyRows"></ol>
+      <div class="more"><label for="nameSearch">Name nicht auf der Liste? Nachname suchen</label><input id="nameSearch" autocomplete="off" placeholder="z. B. Altmann"><ul id="nameHits"></ul></div>
+      <div id="resultBox"></div>
+    </div>
+  </section>
+</div>
+
+<div id="modal" class="overlay" hidden><div class="dialog" role="dialog" aria-modal="true"></div></div>
+<div id="scene" hidden><div class="art"></div><div class="card wrap"><div class="card-in"><div class="kick"></div><h2 class="ttl"></h2><p class="txt"></p><p class="lat"></p><p class="de"></p><div class="choices"></div><div class="sc-ctrl"><button class="t-btn" id="scNext" type="button">Weiter</button></div></div></div></div>
+
+<div id="title">
+  <div class="art"></div>
+  <div class="card wrap"><div class="card-in">
+    <div class="sub">Sixtinische Kapelle · März 2069</div>
+    <h1>Konklave</h1>
+    <p>Der Stuhl Petri ist leer. Als Dekan des Kardinalskollegiums leiten Sie die Wahl des neuen Papstes – nach den Regeln der Apostolischen Konstitution <i>Universi Dominici Gregis</i>. Sie schließen Türen, verteilen Wahlzettel, zählen Stimmen und entscheiden, wenn etwas schiefgeht.</p>
+    <div class="row">
+      <div><label for="deanName">Ihr Name als Kardinaldekan</label><input id="deanName" value="Raffaele Montecalvo" maxlength="40"></div>
+      <button class="t-btn" id="btnStart" type="button">Konklave eröffnen</button>
+      <button class="t-btn alt" id="btnQuick" type="button" style="color:#ecdfc6;border-color:#6b5a47">Direkt zur Prozession</button>
+    </div>
+    <p class="small">Mit Ton spielen: Orgel, Gesang und Stimmen entstehen live im Browser. Alle Figuren sind erfunden.</p>
+  </div></div>
+</div>
+<script>
+/* ============ DATEN: Kollegium, Rollen, Formeln ============ */
+function mulberry(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+let rnd = mulberry(2069);
+const pick = a => a[Math.floor(rnd()*a.length)];
+function gauss(){let u=0,v=0;while(!u)u=rnd();while(!v)v=rnd();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+
+/* Name|Land|Amt|Alter|Region|Ordo|Schlüssel */
+const COLLEGE_RAW = `
+Raffaele Montecalvo|Italien|Kardinaldekan, Kardinalbischof von Ostia und Palestrina|76|CU|CB|dean
+Alejandro Ibarguren|Spanien|Vizedekan, Kardinalbischof von Porto-Santa Rufina|74|CU|CB|vicedean
+Lorenzo Varriale|Italien|Kardinalstaatssekretär|68|CU|CB|varriale
+Ignacy Sobczak|Polen|Präfekt des Dikasteriums für die Glaubenslehre|72|CU|CB|sobczak
+Youssef Haddad|Libanon|Maronitischer Patriarch von Antiochien|71|AS|CB|
+Matthias Lindqvist|Schweden|Camerlengo der Heiligen Römischen Kirche|70|CU|CB|camerlengo
+Peter Ogunleye|Nigeria|Präfekt des Dikasteriums für die Evangelisierung|73|CU|CB|
+Carl Berg|Deutschland|Bischof von Münster|54|EU|CP|berg
+Arnaud Kessler|Luxemburg|Erzbischof von Luxemburg|67|EU|CP|phone
+Bernard Thevenot|Frankreich|Erzbischof von Lyon|69|EU|CP|
+Jean-Baptiste Morvan|Frankreich|Erzbischof von Paris|66|EU|CP|
+Tomás Arregui Olano|Spanien|Erzbischof von Madrid|71|EU|CP|
+Xavier Puigvert|Spanien|Erzbischof von Barcelona|65|EU|CP|
+Giuseppe Lanfranchi|Italien|Erzbischof von Mailand|70|EU|CP|
+Salvatore Mancuso|Italien|Erzbischof von Neapel|67|EU|CP|
+Andrea Bellomo|Italien|Patriarch von Venedig|63|EU|CP|
+Michele Cardone|Italien|Erzbischof von Bologna|69|EU|CP|
+Stefan Altmann|Österreich|Erzbischof von Wien|66|EU|CP|
+Johannes Reiter|Deutschland|Erzbischof von Köln|68|EU|CP|
+Wojciech Kalinowski|Polen|Erzbischof von Krakau|64|EU|CP|
+Marek Zieliński|Polen|Erzbischof von Warschau|70|EU|CP|
+Duarte Meneses|Portugal|Patriarch von Lissabon|67|EU|CP|
+Ciarán Mulcahy|Irland|Erzbischof von Armagh|71|EU|CP|
+Pieter van Houten|Niederlande|Erzbischof von Utrecht|62|EU|CP|
+Luc Vandeputte|Belgien|Erzbischof von Mecheln-Brüssel|69|EU|CP|
+Ábel Szendrei|Ungarn|Erzbischof von Esztergom-Budapest|72|EU|CP|
+Ivo Marković|Kroatien|Erzbischof von Zagreb|66|EU|CP|
+Mykola Hrytsak|Ukraine|Großerzbischof von Kyjiw-Halytsch|61|EU|CP|
+Petr Novotný|Tschechien|Erzbischof von Prag|68|EU|CP|
+Edmund Carrick|England|Erzbischof von Westminster|70|EU|CP|
+Antônio Carvalho Dias|Brasilien|Erzbischof von São Paulo|63|LA|CP|carvalho
+Rubén Esquivel Batlle|Uruguay|Erzbischof von Montevideo|80|LA|CP|over80
+Ernesto Valdivieso|Chile|Erzbischof von Santiago de Chile|78|LA|CP|ill
+Fernando Zubiría|Mexiko|Erzbischof von Mexiko-Stadt|67|LA|CP|
+Ricardo Altamirano|Mexiko|Erzbischof von Guadalajara|69|LA|CP|
+Héctor Bustamante|Argentinien|Erzbischof von Buenos Aires|64|LA|CP|
+Julián Echeverri|Kolumbien|Erzbischof von Bogotá|70|LA|CP|
+Marcos Teixeira Leal|Brasilien|Erzbischof von Rio de Janeiro|66|LA|CP|
+Paulo Henrique Sarmento|Brasilien|Erzbischof von São Salvador da Bahia|61|LA|CP|
+João Batista Ribas|Brasilien|Erzbischof von Brasília|68|LA|CP|
+Óscar Villalba|Paraguay|Erzbischof von Asunción|65|LA|CP|
+Luis Quispe Mamani|Peru|Erzbischof von Lima|62|LA|CP|
+Gregorio Andrade|Ecuador|Erzbischof von Quito|71|LA|CP|
+Mauricio Ochoa|Venezuela|Erzbischof von Caracas|67|LA|CP|
+Rolando Chávez|Bolivien|Erzbischof von Santa Cruz de la Sierra|59|LA|CP|
+Dionisio Cabrera|Kuba|Erzbischof von San Cristóbal de la Habana|72|LA|CP|
+Leonel Fuentes|Guatemala|Erzbischof von Guatemala|63|LA|CP|
+Arturo Benítez|El Salvador|Erzbischof von San Salvador|60|LA|CP|
+Ramón Peralta|Dominikanische Republik|Erzbischof von Santo Domingo|69|LA|CP|
+Claude Pierre-Louis|Haiti|Erzbischof von Port-au-Prince|61|LA|CP|
+Chidi Okafor|Nigeria|Erzbischof von Lagos|66|AF|CP|okafor
+Marie-Joseph Kabasele|DR Kongo|Erzbischof von Kinshasa|59|AF|CP|kabasele
+Emmanuel Asamoah|Ghana|Erzbischof von Accra|64|AF|CP|
+Théodore Ndayisaba|Burundi|Erzbischof von Gitega|62|AF|CP|
+Samuel Kiprono|Kenia|Erzbischof von Nairobi|67|AF|CP|
+Paul Ssekandi|Uganda|Erzbischof von Kampala|65|AF|CP|
+Gabriel Tsehaye|Äthiopien|Erzbischof von Addis Abeba|70|AF|CP|
+Augustin Rakotomalala|Madagaskar|Erzbischof von Antananarivo|63|AF|CP|
+Jean-Pierre Kaboré|Burkina Faso|Erzbischof von Ouagadougou|68|AF|CP|
+Ibrahima Diouf|Senegal|Erzbischof von Dakar|61|AF|CP|
+Nicodemus Banda|Malawi|Erzbischof von Lilongwe|60|AF|CP|
+Thabo Mokoena|Südafrika|Erzbischof von Johannesburg|66|AF|CP|
+Patrice Ngoumou|Kamerun|Erzbischof von Yaoundé|69|AF|CP|
+Francis Mutale|Sambia|Erzbischof von Lusaka|64|AF|CP|
+Michael Okeke|Nigeria|Erzbischof von Abuja|62|AF|CP|
+Benedict Oyelaran|Nigeria|Erzbischof von Ibadan|71|AF|CP|
+Joachim Mushi|Tansania|Erzbischof von Daressalam|67|AF|CP|
+Anselme Kouassi|Elfenbeinküste|Erzbischof von Abidjan|65|AF|CP|
+Pascal Nzeyimana|Ruanda|Erzbischof von Kigali|63|AF|CP|
+Daniel Lual Deng|Südsudan|Erzbischof von Juba|58|AF|CP|
+Joseph Trần Minh Đức|Vietnam|Erzbischof von Hanoi|61|AS|CP|tran
+Antonio Villareal|Philippinen|Erzbischof von Manila|58|AS|CP|villareal
+Ramil Castañeda|Philippinen|Erzbischof von Cebu|64|AS|CP|comms
+Thomas Kim Jae-won|Südkorea|Erzbischof von Seoul|66|AS|CP|
+Paul Yamada Kenji|Japan|Erzbischof von Tokio|68|AS|CP|
+Francis Lourdusamy|Indien|Erzbischof von Madras-Mylapore|63|AS|CP|
+Mathew Thottathil|Indien|Großerzbischof der Syro-Malabaren|67|AS|CP|
+Anil D'Souza|Indien|Erzbischof von Bombay|70|AS|CP|
+Peter Wijesinghe|Sri Lanka|Erzbischof von Colombo|65|AS|CP|
+Yohanes Sutrisno|Indonesien|Erzbischof von Jakarta|62|AS|CP|
+Michael Tan Boon Keng|Singapur|Erzbischof von Singapur|60|AS|CP|
+Simon Lam Wai-ming|China|Bischof von Hongkong|64|AS|CP|
+John Baptist Wang|Taiwan|Erzbischof von Taipeh|69|AS|CP|
+Pierre Somsak Phongpan|Thailand|Erzbischof von Bangkok|66|AS|CP|
+Charles Maung Thein|Myanmar|Erzbischof von Yangon|68|AS|CP|
+Ignatius Anwar|Pakistan|Erzbischof von Karatschi|71|AS|CP|
+Anthony Rozario|Bangladesch|Erzbischof von Dhaka|63|AS|CP|
+Rafael Alves Ximenes|Osttimor|Erzbischof von Dili|59|AS|CP|
+Jamal Khoury|Jordanien|Lateinischer Patriarch von Jerusalem|65|AS|CP|
+Patrick Hart|USA|Erzbischof von Philadelphia|64|NA|CP|hart
+Gerald Whitcombe|USA|Erzbischof von Boston|69|NA|CP|pact
+Daniel Kowalczyk|USA|Erzbischof von Chicago|66|NA|CP|
+Miguel Ángel Treviño|USA|Erzbischof von Los Angeles|62|NA|CP|
+Robert Callaghan|USA|Erzbischof von New York|70|NA|CP|
+James Okonski|USA|Erzbischof von Washington|67|NA|CP|
+Luc Bergeron|Kanada|Erzbischof von Québec|68|NA|CP|
+Stephen MacNeil|Kanada|Erzbischof von Toronto|65|NA|CP|
+Raymond Fortier|Kanada|Erzbischof von Montréal|63|NA|CP|
+Joseph Kaupa|Papua-Neuguinea|Erzbischof von Port Moresby|60|OC|CP|late
+Liam Fitzgerald|Australien|Erzbischof von Sydney|66|OC|CP|
+Wiremu Parata|Neuseeland|Erzbischof von Wellington|64|OC|CP|
+Sione Taufa|Tonga|Bischof von Tonga|61|OC|CP|
+Étienne Marchais|Frankreich|Kardinalprotodiakon, Präfekt des Dikasteriums für den Klerus|71|CU|CD|protodeacon
+Hans-Georg Wiesner|Deutschland|Präfekt des Dikasteriums zur Förderung der Einheit der Christen|70|CU|CD|
+Gianluca Ferrante|Italien|Präfekt des Dikasteriums für den Gottesdienst|69|CU|CD|
+Kevin Moynihan|USA|Präfekt des Dikasteriums für die Laien, die Familie und das Leben|66|CU|CD|
+Carlos Mendonça|Brasilien|Präfekt des Dikasteriums für den Dienst zugunsten der ganzheitlichen Entwicklung|64|CU|CD|
+Joseph Mbaye|Senegal|Präfekt des Dikasteriums für den Interreligiösen Dialog|67|CU|CD|
+Rafael Llorente|Spanien|Präfekt des Dikasteriums für die Bischöfe|68|CU|CD|
+Augusto Pellegrini|Italien|Präfekt der Apostolischen Signatur|72|CU|CD|canonist
+Stanislav Horák|Slowakei|Präfekt des Dikasteriums für die Orientalischen Kirchen|65|CU|CD|
+Vincent Ouédraogo|Burkina Faso|Präfekt des Dikasteriums für die Kultur und die Bildung|63|CU|CD|
+Anthony Pereira|Indien|Präfekt des Dikasteriums für die Kommunikation|62|CU|CD|
+Matteo Galli|Italien|Präsident des Governatorats|70|CU|CD|
+Pierre-Yves Daumal|Frankreich|Archivar und Bibliothekar der Heiligen Römischen Kirche|67|CU|CD|
+Diego Arcos|Mexiko|Großpönitentiar|66|CU|CD|
+Ricardo Salazar|Kolumbien|Präfekt des Dikasteriums für die Selig- und Heiligsprechungsprozesse|64|CU|CD|
+Ulrich Brandl|Deutschland|Präfekt des Wirtschaftssekretariats|61|CU|CD|
+Francis Okello|Uganda|Präfekt des Dikasteriums für die Gesetzestexte|60|CU|CD|
+Dominik Hrabal|Tschechien|Almosenmeister Seiner Heiligkeit|57|CU|CD|junior
+`;
+
+const REGION_NAMES = {EU:'Europa',LA:'Lateinamerika',AF:'Afrika',AS:'Asien und Nahost',NA:'Nordamerika',OC:'Ozeanien',CU:'Römische Kurie'};
+const REGION_POS = {EU:[0.05,-0.05],LA:[0.35,0.45],AF:[-0.35,0.35],AS:[0.0,0.25],NA:[-0.35,-0.05],OC:[0.2,0.3],CU:[-0.1,-0.55]};
+const ORDO_NAMES = {CB:'Kardinalbischof',CP:'Kardinalpriester',CD:'Kardinaldiakon'};
+
+/* Papabili: Position (x: Reform+ / Tradition−, y: Seelsorge+ / Verwaltung−) */
+const PAPABILI = {
+  berg:     {pos:[0.12,0.45], charisma:0.40, stub:0.5,  ballot:['Berg','Card. Berg','Carolus Berg','C. Berg','Berg'], profile:'Brückenbauer aus dem Münsterland, Seelsorger, gilt als Mann des Ausgleichs.', homily:'margines'},
+  okafor:   {pos:[-0.55,0.45],charisma:0.72, stub:0.65, ballot:['Okafor','Card. Okafor','Chidi Okafor'], profile:'Wortgewaltiger Prediger aus Lagos, theologisch konservativ, sozial engagiert.', homily:'traditio'},
+  carvalho: {pos:[0.7,0.55],  charisma:0.70, stub:0.55, ballot:['Carvalho Dias','Card. Carvalho','Carvalho'], profile:'Reformer aus São Paulo, Stimme der Armen und der Synodalität.', homily:'reformatio'},
+  varriale: {pos:[0.0,-0.75], charisma:0.66, stub:0.7,  ballot:['Varriale','Card. Varriale','L. Varriale'], profile:'Diplomat und Staatssekretär. Kennt die Kurie wie kein anderer.', homily:'unitas'},
+  tran:     {pos:[-0.28,0.05], charisma:0.44, stub:0.4,  ballot:['Tran','Trần Minh Đức','Card. Tran'], profile:'Leiser Hirte aus Hanoi, Brücke zur Kirche in Asien.', homily:'unitas'},
+  villareal:{pos:[0.45,0.45], charisma:0.60, stub:0.45, ballot:['Villareal','Card. Villareal','A. Villareal'], profile:'Jung, beliebt, medienstark. Erzbischof von Manila.', homily:'margines'},
+  hart:     {pos:[-0.75,-0.2],charisma:0.60, stub:0.8,  ballot:['Hart','Card. Hart','Patrick Hart'], profile:'Liturgisch und lehramtlich streng. Fürsprecher der Tradition.', homily:'traditio'},
+  kabasele: {pos:[0.35,0.6],  charisma:0.55, stub:0.45, ballot:['Kabasele','Card. Kabasele','M.-J. Kabasele'], profile:'Friedensvermittler aus Kinshasa, pastoral und mutig.', homily:'margines'},
+  sobczak:  {pos:[-0.8,-0.6], charisma:0.52, stub:0.85, ballot:['Sobczak','Card. Sobczak','I. Sobczak'], profile:'Hüter der Glaubenslehre. Klar, gelehrt, unbeugsam.', homily:'traditio'},
+};
+
+const COLLEGE = COLLEGE_RAW.trim().split('\n').map((l,i)=>{
+  const [name,country,office,age,region,ordo,key] = l.split('|');
+  const parts = name.split(' ');
+  return {id:i, name, short: shortName(name), country, office, age:+age, region, ordo, key:key||'', idx:i};
+});
+function shortName(n){
+  const special = {'Joseph Trần Minh Đức':'Trần','Antônio Carvalho Dias':'Carvalho Dias','Tomás Arregui Olano':'Arregui','Rubén Esquivel Batlle':'Esquivel','Luis Quispe Mamani':'Quispe','Thomas Kim Jae-won':'Kim','Paul Yamada Kenji':'Yamada','Michael Tan Boon Keng':'Tan','Simon Lam Wai-ming':'Lam','Pierre Somsak Phongpan':'Phongpan','Charles Maung Thein':'Maung Thein','Rafael Alves Ximenes':'Ximenes','Daniel Lual Deng':'Lual Deng','Paulo Henrique Sarmento':'Sarmento','João Batista Ribas':'Ribas','Marcos Teixeira Leal':'Teixeira','Miguel Ángel Treviño':'Treviño','Pieter van Houten':'van Houten','Claude Pierre-Louis':'Pierre-Louis','John Baptist Wang':'Wang','Raffaele Montecalvo':'Montecalvo'};
+  if(special[n]) return special[n];
+  const p=n.split(' '); return p[p.length-1];
+}
+const BY_KEY = {}; COLLEGE.forEach(c=>{ if(c.key) BY_KEY[c.key]=c; });
+/* Positionen und persönliche Neigungen */
+COLLEGE.forEach(c=>{
+  const rp = REGION_POS[c.region];
+  c.pos = [Math.max(-1,Math.min(1,rp[0]+gauss()*0.33)), Math.max(-1,Math.min(1,rp[1]+gauss()*0.33))];
+  c.affinity = {}; c.writing = Math.floor(rnd()*4);
+  if(PAPABILI[c.key]) { c.pap = PAPABILI[c.key]; c.pos = c.pap.pos.slice(); }
+});
+const PAP_IDS = Object.keys(PAPABILI).map(k=>BY_KEY[k].id);
+COLLEGE.forEach(c=>{ PAP_IDS.forEach(p=>c.affinity[p]=gauss()*0.32); });
+/* "Lieblingssöhne": Namen, die im ersten Wahlgang Achtungsstimmen erhalten */
+const FAVORITES = {EU:['Reiter','Lanfranchi','Altmann','Morvan'],LA:['Bustamante','Zubiría','Quispe Mamani'],AF:['Kiprono','Asamoah','Ngoumou'],AS:['Kim Jae-won','Haddad','Khoury'],NA:['Callaghan','Bergeron'],OC:['Fitzgerald'],CU:['Wiesner','Llorente','Ibarguren']};
+const FAV_IDS = {}; for(const r in FAVORITES){ FAV_IDS[r] = FAVORITES[r].map(s=>COLLEGE.find(c=>c.name.includes(s)).id); }
+
+/* Nicht-Wähler */
+const STAFF = {
+  master:'Mons. Lucio Andreoli', masterTitle:'Meister der Päpstlichen Liturgischen Feiern',
+  secretary:'Mons. Pietro Ascani', secretaryTitle:'Sekretär des Kardinalskollegiums',
+  preacher:'P. Anselm Gruber OSB', preacherTitle:'Prediger der Meditation'
+};
+
+/* Handschriften für Wahlzettel */
+const HANDS = ['"Homemade Apple", cursive','"La Belle Aurore", cursive','"Nothing You Could Do", cursive','"Reenie Beanie", cursive'];
+
+/* ============ Lateinische Texte ============ */
+const TXT = {
+  litany: [
+    ['Kyrie, eleison.','Kyrie, eleison.','Herr, erbarme dich.'],
+    ['Christe, eleison.','Christe, eleison.','Christus, erbarme dich.'],
+    ['Kyrie, eleison.','Kyrie, eleison.','Herr, erbarme dich.'],
+    ['Sancta Maria, Mater Dei,','ora pro nobis.','Heilige Maria, Mutter Gottes, bitte für uns.'],
+    ['Sancte Michael,','ora pro nobis.','Heiliger Michael, bitte für uns.'],
+    ['Sancti Angeli Dei,','orate pro nobis.','Ihr heiligen Engel Gottes, bittet für uns.'],
+    ['Sancte Ioannes Baptista,','ora pro nobis.','Heiliger Johannes der Täufer, bitte für uns.'],
+    ['Sancte Ioseph,','ora pro nobis.','Heiliger Josef, bitte für uns.'],
+    ['Sancti Petre et Paule,','orate pro nobis.','Heilige Petrus und Paulus, bittet für uns.'],
+    ['Sancte Andrea,','ora pro nobis.','Heiliger Andreas, bitte für uns.'],
+    ['Sancta Maria Magdalena,','ora pro nobis.','Heilige Maria Magdalena, bitte für uns.'],
+    ['Sancte Stephane,','ora pro nobis.','Heiliger Stephanus, bitte für uns.'],
+    ['Sancte Laurenti,','ora pro nobis.','Heiliger Laurentius, bitte für uns.'],
+    ['Sancta Agnes,','ora pro nobis.','Heilige Agnes, bitte für uns.'],
+    ['Sancte Gregori,','ora pro nobis.','Heiliger Gregor, bitte für uns.'],
+    ['Sancte Augustine,','ora pro nobis.','Heiliger Augustinus, bitte für uns.'],
+    ['Sancte Benedicte,','ora pro nobis.','Heiliger Benedikt, bitte für uns.'],
+    ['Sancte Francisce,','ora pro nobis.','Heiliger Franziskus, bitte für uns.'],
+    ['Sancte Dominice,','ora pro nobis.','Heiliger Dominikus, bitte für uns.'],
+    ['Sancta Catharina,','ora pro nobis.','Heilige Katharina, bitte für uns.'],
+    ['Sancta Teresia,','ora pro nobis.','Heilige Teresa, bitte für uns.'],
+    ['Sancte Liudgere,','ora pro nobis.','Heiliger Liudger, bitte für uns.'],
+    ['Omnes Sancti et Sanctae Dei,','orate pro nobis.','Alle Heiligen Gottes, bittet für uns.'],
+  ],
+  veni: [
+    ['Veni, Creator Spiritus,','Komm, Schöpfer Geist,'],
+    ['mentes tuorum visita,','such heim die Herzen der Deinen,'],
+    ['imple superna gratia','erfülle mit himmlischer Gnade'],
+    ['quae tu creasti pectora.','die Herzen, die du geschaffen hast.'],
+    ['Qui diceris Paraclitus,','Der du der Tröster heißt,'],
+    ['altissimi donum Dei,','Gabe des höchsten Gottes,'],
+    ['fons vivus, ignis, caritas,','lebendiger Quell, Feuer, Liebe'],
+    ['et spiritalis unctio.','und geistliche Salbung.'],
+  ],
+  oathCommon: ['Nos omnes et singuli in hac electione Summi Pontificis versantes Cardinales electores promittimus, vovemus et iuramus …',
+    'Wir alle und jeder einzelne der an dieser Wahl beteiligten Kardinäle versprechen, geloben und schwören, die Vorschriften der Apostolischen Konstitution Universi Dominici Gregis treu zu befolgen und über alles, was die Wahl betrifft, strengstes Stillschweigen zu bewahren.'],
+  oathSingle: (n)=>[`Et ego, ${n}, Cardinalis, spondeo, voveo ac iuro. Sic me Deus adiuvet et haec Sancta Dei Evangelia, quae manu mea tango.`, `Und ich, Kardinal ${n}, verspreche, gelobe und schwöre es. So wahr mir Gott helfe und diese heiligen Evangelien, die ich mit meiner Hand berühre.`],
+  testor: ['Testor Christum Dominum, qui me iudicaturus est, me eum eligere, quem secundum Deum iudico eligi debere.','Ich rufe Christus, den Herrn, der mein Richter sein wird, zum Zeugen an, dass ich den wähle, von dem ich glaube, dass er nach Gottes Willen gewählt werden sollte.'],
+  extra: ['Extra omnes!','Alle hinaus!'],
+  eligo: 'Eligo in Summum Pontificem',
+  accept: ['Acceptasne electionem de te canonice factam in Summum Pontificem?','Nimmst du deine kanonisch erfolgte Wahl zum Papst an?'],
+  accepto: ['Accepto.','Ich nehme an.'],
+  quoNomine: ['Quo nomine vis vocari?','Mit welchem Namen willst du gerufen werden?'],
+  vocabor: ['Vocabor Franciscus Secundus.','Ich werde Franziskus II. heißen.'],
+  habemus: [
+    ['Annuntio vobis gaudium magnum:','Ich verkünde euch eine große Freude:'],
+    ['habemus Papam!','Wir haben einen Papst!'],
+    ['Eminentissimum ac Reverendissimum Dominum,','Seine Eminenz, den Hochwürdigsten Herrn,'],
+    ['Dominum Carolum,','Herrn Carl,'],
+    ['Sanctae Romanae Ecclesiae Cardinalem Berg,','Kardinal der Heiligen Römischen Kirche Berg,'],
+    ['qui sibi nomen imposuit Franciscum Secundum.','der sich den Namen Franziskus II. gegeben hat.'],
+  ],
+  benedictio: ['Benedicat vos omnipotens Deus, Pater, et Filius, et Spiritus Sanctus.','Es segne euch der allmächtige Gott, der Vater und der Sohn und der Heilige Geist.'],
+  motto: ['Deus dixit: Ad margines ite.','Gott sprach: Geht an die Ränder.'],
+};
+
+/* Regelwerk (Kurzreferenz) */
+const RULES = [
+  ['Wer wählt?','Alle Kardinäle, die vor dem Tag des Beginns der Sedisvakanz das 80. Lebensjahr noch nicht vollendet haben. Höchstzahl 120.','UDG 33'],
+  ['Niemand wird ausgeschlossen','Kein Kardinalwähler darf aus irgendeinem Grund oder Vorwand von der aktiven oder passiven Wahl ausgeschlossen werden.','UDG 35'],
+  ['Nachzügler','Wer verspätet eintrifft, wird in jedem Stadium des Wahlvorgangs zugelassen.','UDG 39'],
+  ['Beginn','15 Tage nach Beginn der Sedisvakanz, spätestens nach 20 Tagen. Früher nur, wenn alle Wähler anwesend sind.','UDG 37 · Normas nonnullas 2013'],
+  ['Abgeschiedenheit','Keine Telefone, keine Post, keine Medien. Ausnahmen nur aus schwerwiegendem Grund mit Zustimmung der Sonderkongregation.','UDG 44, 56–61'],
+  ['Geheimhaltung','Wer das Wahlgeheimnis bricht, zieht sich die Exkommunikation als Tatstrafe zu.','UDG 58 · Normas nonnullas 2013'],
+  ['Vorbereitung','Zeremonienmeister verteilen die Zettel. Per Los werden drei Skrutatoren, drei Infirmarii und drei Revisoren bestimmt. Der jüngste Kardinaldiakon schließt die Tür.','UDG 64'],
+  ['Abstimmung','Jeder Wähler tritt in der Rangordnung zum Altar, spricht den Eid „Testor Christum Dominum …“ und legt seinen Zettel in die Urne.','UDG 66'],
+  ['Kranke Wähler','Drei Infirmarii bringen eine verschlossene Urne zu Kranken in der Domus Sanctae Marthae.','UDG 67'],
+  ['Zählung','Stimmt die Zahl der Zettel nicht mit der Zahl der Wähler überein, werden alle verbrannt und es wird sofort neu gewählt.','UDG 68'],
+  ['Auszählung','Der dritte Skrutator liest jeden Namen laut vor. Zwei ineinander gefaltete Zettel mit gleichem Namen zählen als eine Stimme, mit verschiedenen Namen als keine.','UDG 69'],
+  ['Mehrheit','Gewählt ist, wer zwei Drittel der Stimmen der Anwesenden erhält.','UDG 62 · Benedikt XVI. 2007'],
+  ['Wahlgänge','Am ersten Nachmittag ein Wahlgang, danach je zwei am Vormittag und am Nachmittag. Nach drei Tagen ohne Ergebnis bis zu einem Tag Gebetspause.','UDG 63, 74'],
+  ['Absprachen','Pakte, Vereinbarungen und Versprechen, die zur Stimmabgabe verpflichten, sind verboten und nichtig.','UDG 81'],
+  ['Verbrennen','Die Zettel und alle Notizen der Kardinäle werden nach jeder Sitzung verbrannt. Schwarzer Rauch: keine Wahl. Weißer Rauch und Glocken: gewählt.','UDG 70 · seit 2005'],
+  ['Nichtigkeit','Eine Wahl, die auf andere Weise als vorgeschrieben erfolgt, ist null und nichtig.','UDG 76'],
+  ['Annahme','Der Dekan fragt den Gewählten: „Acceptasne …?“ und „Quo nomine vis vocari?“ Ist der Dekan selbst gewählt, fragt der Vizedekan.','UDG 87–88'],
+  ['Verkündigung','Der Kardinalprotodiakon verkündet von der Loggia der Petersbasilika: „Habemus Papam“.','UDG 89'],
+];
+/* ============ STIMMENMODELL ============ */
+const MODEL = {
+  /* Ermittelt für einen Wahlgang die Stimme jedes anwesenden Wählers (außer dem Spieler). */
+  vote(ctx){
+    const {k, present, last, total, withdrawn, bonus, regionBonus, playerId, playerVote} = ctx;
+    const res = new Map();
+    const favP = 0.17*Math.pow(0.45, k-1);
+    const mom = 0.9 + 0.32*Math.min(k,10);
+    const bergId = BY_KEY.berg.id;
+    const ballots = [];
+    for(const id of present){
+      const e = COLLEGE[id];
+      let choice;
+      if(id===playerId){ choice = playerVote; }
+      else if(rnd() < favP){
+        const pool = FAV_IDS[e.region].filter(x=>x!==id && present.includes(x));
+        choice = pool.length? pick(pool) : null;
+      }
+      if(choice==null){
+        let best=-1e9, bestId=null;
+        for(const c of PAP_IDS){
+          if(c===id || !present.includes(c)) continue;
+          const p = COLLEGE[c];
+          const dx=e.pos[0]-p.pos[0], dy=e.pos[1]-p.pos[1];
+          let u = -1.7*Math.sqrt(dx*dx+dy*dy) + (e.region===p.region?0.45:0) + 0.7*p.pap.charisma + (e.affinity[c]||0);
+          const share = total? (last[c]||0)/total : 0;
+          u += mom*share;
+          if(share>0 && share<0.08 && k>1) u -= 0.35*(k-1)*0.25;
+          if(c===bergId) u += 0.045*(k-1) + (k>9?0.3*(k-9):0);
+          if(withdrawn[c]) u -= withdrawn[c];
+          if(bonus[c]) u += bonus[c];
+          if(regionBonus && regionBonus[c] && regionBonus[c][e.region]) u += regionBonus[c][e.region];
+          u += gauss()*0.22;
+          if(u>best){best=u;bestId=c;}
+        }
+        choice = bestId;
+      }
+      res.set(choice,(res.get(choice)||0)+1);
+      ballots.push({voter:id, cand:choice});
+    }
+    /* Kein Rivale soll an Berg vorbei die Zweidrittelmehrheit erreichen. */
+    const need = Math.ceil(present.length*2/3);
+    for(const [c,v] of res){
+      if(c!==bergId && v>60){
+        let excess = v-58;
+        for(const b of ballots){ if(excess<=0) break; if(b.cand===c && b.voter!==playerId && b.voter!==bergId){ b.cand=bergId; excess--; } }
+      }
+    }
+    const tally = new Map();
+    ballots.forEach(b=>tally.set(b.cand,(tally.get(b.cand)||0)+1));
+    return {ballots, tally};
+  }
+};
+/* ============ AUDIO: alles live synthetisiert, mit Kirchenhall ============ */
+const AUDIO = (()=>{
+  let ctx=null, master, comp, verbSend, verbs={}, space='chapel', muted=false, noiseBuf=null;
+  const buses={};
+  const A = {ready:false};
+  const midi = m => 440*Math.pow(2,(m-69)/12);
+
+  function makeIR(sec, bright){
+    const sr=ctx.sampleRate, len=Math.floor(sr*sec), buf=ctx.createBuffer(2,len,sr);
+    for(let ch=0;ch<2;ch++){
+      const d=buf.getChannelData(ch); let lp=0;
+      for(let i=0;i<len;i++){
+        const t=i/sr, n=Math.random()*2-1;
+        const k = bright*(1-t/sec)+0.04;
+        lp += (n-lp)*k;
+        const env = Math.exp(-6.9*t/sec) * (t<0.012?t/0.012:1);
+        d[i] = lp*env*(0.9/Math.sqrt(k+0.02));
+      }
+      [0.019,0.027,0.041,0.053,0.071].forEach((tt,j)=>{const i=Math.floor(tt*sr*(1+ch*0.07)); if(i<len) d[i]+= (0.5-j*0.08)*(Math.random()>.5?1:-1);});
+    }
+    return buf;
+  }
+  function bus(name, dry, wet){
+    const g=ctx.createGain(); const d=ctx.createGain(); const w=ctx.createGain();
+    d.gain.value=dry; w.gain.value=wet; g.connect(d); g.connect(w); d.connect(master); w.connect(verbSend);
+    buses[name]={in:g,dry:d,wet:w}; return g;
+  }
+  A.init = function(){
+    if(ctx) { if(ctx.state==='suspended') ctx.resume(); return; }
+    try{ ctx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ return; }
+    comp = ctx.createDynamicsCompressor(); comp.threshold.value=-14; comp.ratio.value=3; comp.connect(ctx.destination);
+    master = ctx.createGain(); master.gain.value = muted?0:0.85; master.connect(comp);
+    verbSend = ctx.createGain(); verbSend.gain.value=1;
+    const defs = {chapel:[4.4,0.55], basilica:[7.5,0.4], outdoor:[1.7,0.7], hall:[1.5,0.6]};
+    for(const k in defs){ const c=ctx.createConvolver(); c.buffer=makeIR(...defs[k]); const g=ctx.createGain(); g.gain.value = k===space?1:0; verbSend.connect(c); c.connect(g); g.connect(master); verbs[k]=g; }
+    noiseBuf = ctx.createBuffer(1, ctx.sampleRate*2, ctx.sampleRate);
+    const nd=noiseBuf.getChannelData(0); for(let i=0;i<nd.length;i++) nd[i]=Math.random()*2-1;
+    bus('organ',0.28,0.75); bus('voice',0.32,0.85); bus('amb',0.12,0.7); bus('sfx',0.45,0.7); bus('out',0.7,0.25);
+    buses.organ.in.gain.value=0; buses.amb.in.gain.value=0;
+    A.ready=true;
+    loop();
+  };
+  A.setMuted = m => { muted=m; if(master) master.gain.setTargetAtTime(m?0:0.85, ctx.currentTime, 0.1); };
+  A.isMuted = () => muted;
+  A.setSpace = s => { space=s; if(!ctx) return; for(const k in verbs) verbs[k].gain.setTargetAtTime(k===s?1:0, ctx.currentTime, 0.4); };
+  const now = () => ctx? ctx.currentTime : 0;
+
+  /* ---------- Orgel ---------- */
+  let organWave=null, organOn=false, organTimer=null, organChord='Dm', organLevel=0.5;
+  const CH = {Dm:[50,57,62,65],C:[48,55,64,67],Bb:[46,53,62,65],F:[53,57,60,65],Gm:[55,58,62,67],Am:[57,60,64,69],Asus:[57,62,64,69],A:[57,61,64,69],Dm2:[50,57,65,69]};
+  const NEXT = {Dm:['Bb','Gm','C','Am','Dm2'],Dm2:['Bb','Gm','C'],Bb:['F','C','Gm'],C:['F','Dm','Am'],F:['Gm','Bb','C','Dm'],Gm:['Dm','Asus','C'],Am:['Dm','F','Bb'],Asus:['A'],A:['Dm','Dm2']};
+  function organNote(m, t, dur, amp){
+    const o=ctx.createOscillator(); o.setPeriodicWave(organWave); o.frequency.value=midi(m)*(1+(Math.random()-.5)*0.0015);
+    const o2=ctx.createOscillator(); o2.type='sine'; o2.frequency.value=midi(m)*2.002;
+    const g=ctx.createGain(); const g2=ctx.createGain(); g2.gain.value=0.22;
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(amp,t+0.22); g.gain.setValueAtTime(amp,t+dur); g.gain.linearRampToValueAtTime(0,t+dur+1.4);
+    o.connect(g); o2.connect(g2); g2.connect(g); g.connect(buses.organ.in);
+    o.start(t); o2.start(t); o.stop(t+dur+1.6); o2.stop(t+dur+1.6);
+  }
+  function organStep(){
+    if(!organOn) return;
+    const t=now()+0.05, dur=4.2+Math.random()*2.2;
+    const notes=CH[organChord];
+    notes.forEach((m,i)=>organNote(m,t+i*0.015,dur,0.05));
+    organNote(notes[0]-12,t,dur,0.07);
+    if(Math.random()<0.5){ const top=notes[3]+ (Math.random()<.5?2:-2); organNote(top+12, t+dur*0.5, dur*0.45, 0.018); }
+    organChord = NEXT[organChord][Math.floor(Math.random()*NEXT[organChord].length)];
+    organTimer=setTimeout(organStep, dur*1000);
+  }
+  A.organ = (on, level=0.5) => {
+    if(!ctx) return;
+    if(!organWave){ const n=12, re=new Float32Array(n), im=new Float32Array(n); const amps=[0,1,0.55,0.32,0.36,0.12,0.18,0.06,0.16,0.04,0.05,0.03]; for(let i=1;i<n;i++) im[i]=amps[i]; organWave=ctx.createPeriodicWave(re,im); }
+    organLevel=level;
+    buses.organ.in.gain.setTargetAtTime(on?level:0, now(), on?0.6:1.2);
+    if(on && !organOn){ organOn=true; organChord='Dm'; organStep(); }
+    if(!on && organOn){ organOn=false; clearTimeout(organTimer); }
+  };
+
+  /* ---------- Stimmengetuschel ---------- */
+  const VOW = {a:[730,1090,2440],e:[530,1840,2480],i:[300,2200,2950],o:[570,840,2410],u:[320,870,2240]};
+  let murmurVoices=[], murmurLevel=0;
+  function makeMurmurVoice(){
+    const o=ctx.createOscillator(); o.type='sawtooth'; const f0=95+Math.random()*60; o.frequency.value=f0;
+    const b1=ctx.createBiquadFilter(), b2=ctx.createBiquadFilter(); b1.type=b2.type='bandpass'; b1.Q.value=6; b2.Q.value=9;
+    const env=ctx.createGain(); env.gain.value=0; const lp=ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=1700;
+    const p=ctx.createStereoPanner? ctx.createStereoPanner():null; const out=ctx.createGain(); out.gain.value=0.7;
+    o.connect(b1); o.connect(b2); b1.connect(env); b2.connect(env); env.connect(lp); lp.connect(out);
+    if(p){p.pan.value=Math.random()*1.6-0.8; out.connect(p); p.connect(buses.amb.in);} else out.connect(buses.amb.in);
+    o.start(); return {o,b1,b2,env,f0,next:now()+Math.random()*2};
+  }
+  function murmurTick(){
+    if(murmurLevel<=0.001) return;
+    const t0=now();
+    for(const v of murmurVoices){
+      while(v.next < t0+0.35){
+        if(Math.random()<0.13){ v.next += 0.5+Math.random()*1.8; v.f0 = 95+Math.random()*60; continue; }
+        const d=0.09+Math.random()*0.16, vw=VOW['aeiou'[Math.floor(Math.random()*5)]], t=Math.max(v.next,t0+0.01);
+        v.o.frequency.setTargetAtTime(v.f0*(0.9+Math.random()*0.25), t, 0.04);
+        v.b1.frequency.setTargetAtTime(vw[0],t,0.02); v.b2.frequency.setTargetAtTime(vw[1],t,0.02);
+        v.env.gain.setTargetAtTime(0.5+Math.random()*0.5, t, 0.02); v.env.gain.setTargetAtTime(0.05, t+d*0.75, 0.03);
+        v.next = t+d;
+      }
+    }
+  }
+  A.murmur = (level) => {
+    if(!ctx) return; murmurLevel=level;
+    if(level>0 && !murmurVoices.length){ for(let i=0;i<8;i++) murmurVoices.push(makeMurmurVoice()); }
+    buses.amb.in.gain.setTargetAtTime(level*0.55, now(), 0.8);
+  };
+
+  /* ---------- Schritte ---------- */
+  let walkers=0, nextStep=0;
+  function step(t, gain=0.3){
+    const s=ctx.createBufferSource(); s.buffer=noiseBuf; const bp=ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=1700+Math.random()*1400; bp.Q.value=1.3;
+    const g=ctx.createGain(); g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(gain,t+0.003); g.gain.exponentialRampToValueAtTime(0.001,t+0.06);
+    const o=ctx.createOscillator(); o.frequency.setValueAtTime(120,t); o.frequency.exponentialRampToValueAtTime(55,t+0.08); const og=ctx.createGain(); og.gain.setValueAtTime(gain*0.9,t); og.gain.exponentialRampToValueAtTime(0.001,t+0.09);
+    const p=ctx.createStereoPanner?ctx.createStereoPanner():null;
+    s.connect(bp); bp.connect(g); o.connect(og);
+    const dest=buses.sfx.in;
+    if(p){p.pan.value=Math.random()*1.4-0.7; g.connect(p); og.connect(p); p.connect(dest);} else {g.connect(dest); og.connect(dest);}
+    s.start(t, Math.random()*1.5, 0.1); o.start(t); o.stop(t+0.1);
+  }
+  A.setWalkers = n => { walkers=n; };
+  function stepsTick(){
+    if(walkers<=0) return;
+    const rate=Math.min(5.5, 1.1+walkers*0.9);
+    const t0=now();
+    if(nextStep<t0) nextStep=t0+0.02;
+    while(nextStep<t0+0.25){ step(nextStep, 0.16+Math.random()*0.12); nextStep += (1/rate)*(0.6+Math.random()*0.8); }
+  }
+  A.step = () => { if(ctx) step(now()+0.01, 0.3); };
+
+  /* ---------- Einzelne Klänge ---------- */
+  function noiseBurst(t, dur, type, freq, q, gain, dest){
+    const s=ctx.createBufferSource(); s.buffer=noiseBuf; const f=ctx.createBiquadFilter(); f.type=type; f.frequency.value=freq; f.Q.value=q;
+    const g=ctx.createGain(); g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(gain,t+Math.min(0.01,dur/4)); g.gain.exponentialRampToValueAtTime(0.0008,t+dur);
+    s.connect(f); f.connect(g); g.connect(dest||buses.sfx.in); s.start(t, Math.random()*1.4, dur+0.05);
+  }
+  A.door = () => { if(!ctx) return; const t=now()+0.02;
+    const o=ctx.createOscillator(); o.frequency.setValueAtTime(70,t); o.frequency.exponentialRampToValueAtTime(38,t+0.5); const g=ctx.createGain(); g.gain.setValueAtTime(0.9,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.7); o.connect(g); g.connect(buses.sfx.in); o.start(t); o.stop(t+0.8);
+    noiseBurst(t,0.35,'lowpass',380,0.7,0.6); noiseBurst(t+0.32,0.05,'bandpass',2600,3,0.25); noiseBurst(t+0.42,0.04,'bandpass',3400,4,0.2);
+  };
+  A.rustle = () => { if(!ctx) return; const t=now(); for(let i=0;i<4;i++) noiseBurst(t+i*0.035+Math.random()*0.02, 0.06+Math.random()*0.05,'bandpass',3000+Math.random()*2500,1.1,0.12); };
+  A.click = () => { if(!ctx) return; noiseBurst(now(),0.03,'bandpass',4200,5,0.18); };
+  A.cough = () => { if(!ctx) return; const t=now(); noiseBurst(t,0.16,'bandpass',800+Math.random()*300,1.4,0.22); noiseBurst(t+0.22,0.12,'bandpass',900,1.4,0.16); };
+  A.clink = () => { if(!ctx) return; const t=now(); const o=ctx.createOscillator(); o.type='sine'; o.frequency.value=2300+Math.random()*1600; const g=ctx.createGain(); g.gain.setValueAtTime(0.06,t); g.gain.exponentialRampToValueAtTime(0.0005,t+0.35); o.connect(g); g.connect(buses.sfx.in); o.start(t); o.stop(t+0.4); };
+  A.paperTick = () => { if(!ctx) return; noiseBurst(now(),0.025,'highpass',5000,0.7,0.1); };
+
+  A.applause = (dur=4, gain=0.5, out=false) => { if(!ctx) return;
+    const sr=ctx.sampleRate, len=Math.floor(sr*dur), buf=ctx.createBuffer(2,len,sr);
+    for(let ch=0;ch<2;ch++){ const d=buf.getChannelData(ch); const n=Math.floor(dur*140);
+      for(let k=0;k<n;k++){ const t=Math.random()*dur; const env=Math.min(1,t/0.6)*Math.min(1,(dur-t)/1.2); if(Math.random()>env) continue; const i0=Math.floor(t*sr), L=Math.floor(sr*(0.006+Math.random()*0.008)), a=0.3+Math.random()*0.6; for(let i=0;i<L&&i0+i<len;i++) d[i0+i]+= (Math.random()*2-1)*a*Math.exp(-i/(L*0.3)); } }
+    const s=ctx.createBufferSource(); s.buffer=buf; const f=ctx.createBiquadFilter(); f.type='bandpass'; f.frequency.value=1400; f.Q.value=0.6; const g=ctx.createGain(); g.gain.value=gain;
+    s.connect(f); f.connect(g); g.connect(out?buses.out.in:buses.sfx.in); s.start();
+  };
+  A.crowd = (dur=6, kind='cheer') => { if(!ctx) return; const t=now()+0.05;
+    const n=14, vw = kind==='cheer'? VOW.a : VOW.o;
+    const peak = kind==='cheer'? 0.06 : 0.035;
+    for(let i=0;i<n;i++){
+      const o=ctx.createOscillator(); o.type='sawtooth'; const f0=(kind==='cheer'?140:120)+Math.random()*(kind==='cheer'?190:80);
+      o.frequency.setValueAtTime(f0,t); o.frequency.linearRampToValueAtTime(f0*(kind==='cheer'?1.25:0.8), t+dur*0.6);
+      const b1=ctx.createBiquadFilter(); b1.type='bandpass'; b1.frequency.value=vw[0]; b1.Q.value=4; const b2=ctx.createBiquadFilter(); b2.type='bandpass'; b2.frequency.value=vw[1]; b2.Q.value=6;
+      const g=ctx.createGain(); const st=t+Math.random()*0.6; g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(peak, st+0.5); g.gain.setValueAtTime(peak, st+dur*0.55); g.gain.linearRampToValueAtTime(0, t+dur);
+      o.connect(b1); o.connect(b2); b1.connect(g); b2.connect(g); g.connect(buses.out.in); o.start(t); o.stop(t+dur+0.1);
+    }
+    const s=ctx.createBufferSource(); s.buffer=noiseBuf; s.loop=true; const f=ctx.createBiquadFilter(); f.type='bandpass'; f.frequency.value=900; f.Q.value=0.5; const g=ctx.createGain();
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(kind==='cheer'?0.32:0.12,t+0.8); g.gain.linearRampToValueAtTime(0,t+dur); s.connect(f); f.connect(g); g.connect(buses.out.in); s.start(t); s.stop(t+dur+0.1);
+    if(kind==='cheer') A.applause(dur*0.9, 0.35, true);
+  };
+  function bell(f, t, gain, dest){
+    const P=[[0.5,0.45,7],[1,1,5],[1.183,0.55,4],[1.506,0.35,3.2],[2,0.6,2.6],[2.514,0.25,1.8],[2.662,0.22,1.5],[3.011,0.18,1.2],[4.166,0.1,0.8]];
+    P.forEach(([r,a,dec])=>{ const o=ctx.createOscillator(); o.frequency.value=f*r; const g=ctx.createGain(); g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(a*gain,t+0.004); g.gain.exponentialRampToValueAtTime(0.0001,t+dec); o.connect(g); g.connect(dest); o.start(t); o.stop(t+dec+0.05); });
+    noiseBurst(t,0.05,'bandpass',f*6,2,gain*0.3,dest);
+  }
+  A.peal = (sec=12) => { if(!ctx) return; const t0=now()+0.1; const F=[130.8,164.8,196,246.9,293.7];
+    let t=t0, i=0; while(t<t0+sec){ const f=F[(i*3+Math.floor(i/5))%F.length]; bell(f,t,0.16,buses.out.in); t+=0.42+Math.random()*0.18; i++; }
+    for(let k=0;k<sec/2.6;k++) bell(98, t0+k*2.6, 0.22, buses.out.in);
+  };
+  A.toll = () => { if(!ctx) return; bell(110, now()+0.05, 0.25, buses.sfx.in); };
+
+  /* ---------- Gesang: Formantstimmen ---------- */
+  const NOTE = {D:50,E:52,F:53,G:55,A:57,B:59,b:58,c:60,d:62,e:64,f:65};
+  function sylInfo(s){
+    let w=s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/qu/g,'k').replace(/^i(?=[aeou])/,'j');
+    const m=w.match(/(ae|oe|au|[aeiouy])/); let v='a', on='', coda='';
+    if(m){ v = {ae:'e',oe:'e',au:'o',y:'i'}[m[1]]||m[1]; on=w.slice(0,m.index); coda=w.slice(m.index+m[1].length); }
+    const cls = c => !c? '' : /[sfxzh]/.test(c)? 'f' : /[tpkcqbdg]/.test(c)? 'p' : 'n';
+    let oc = cls(on.slice(-1)); if(on.slice(-1)==='c' && /[ei]/.test(v)) oc='f';
+    return {v, on:oc, coda: cls(coda.slice(-1))};
+  }
+  function latinSyl(text){
+    const out=[];
+    const words=text.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z\s]/g,' ').split(/\s+/).filter(Boolean);
+    words.forEach((w,wi)=>{
+      w=w.replace(/qu/g,'k').replace(/^i(?=[aeou])/,'j');
+      const toks=[]; const re=/(ae|oe|au|[aeiouy])|([^aeiouy]+)/g; let m;
+      while((m=re.exec(w))) toks.push(m[1]?{v:m[1]}:{c:m[2]});
+      const syl=[]; let pend='';
+      toks.forEach((t,i)=>{ if(t.v){ syl.push(pend+t.v); pend=''; } else if(!syl.length) pend=t.c; else if(i===toks.length-1) syl[syl.length-1]+=t.c; else if(t.c.length>=2){ syl[syl.length-1]+=t.c[0]; pend=t.c.slice(1);} else pend=t.c; });
+      syl.forEach((s,i)=>out.push({s, wordEnd:i===syl.length-1, last: wi===words.length-1 && i===syl.length-1}));
+    });
+    return out;
+  }
+  A.latinSyl = latinSyl;
+
+  function makeSinger(det, pan, gain){
+    const o=ctx.createOscillator(); o.type='sawtooth';
+    const lfo=ctx.createOscillator(); lfo.frequency.value=4.8+Math.random()*0.8; const lg=ctx.createGain(); lg.gain.value=0; lfo.connect(lg); lg.connect(o.frequency);
+    const fs=[0,1,2].map(i=>{const b=ctx.createBiquadFilter(); b.type='bandpass'; b.Q.value=[7,11,14][i]; return b;});
+    const fg=[1.0,0.55,0.28].map(v=>{const g=ctx.createGain(); g.gain.value=v*gain; return g;});
+    const env=ctx.createGain(); env.gain.value=0;
+    const p=ctx.createStereoPanner?ctx.createStereoPanner():null;
+    fs.forEach((b,i)=>{ o.connect(b); b.connect(fg[i]); fg[i].connect(env); });
+    if(p){ p.pan.value=pan; env.connect(p); p.connect(buses.voice.in);} else env.connect(buses.voice.in);
+    o.start(); lfo.start();
+    return {o,lfo,lg,fs,env,det};
+  }
+  function singNote(sg, t, d, freq, vowel, legatoNext){
+    const f=freq*Math.pow(2,sg.det/1200), vw=VOW[vowel]||VOW.a;
+    sg.o.frequency.setTargetAtTime(f, t, 0.025); sg.lg.gain.setTargetAtTime(f*0.005, t+0.15, 0.2);
+    sg.fs.forEach((b,i)=>b.frequency.setTargetAtTime(vw[i]*(1+sg.det*0.0004), t, 0.03));
+    sg.env.gain.setTargetAtTime(1, t+0.005, 0.035);
+    if(!legatoNext) sg.env.gain.setTargetAtTime(0.35, t+d-0.07, 0.025);
+  }
+  function consonant(t, cls, gain){
+    if(cls==='f') noiseBurst(t,0.09,'highpass',3800,0.8,gain*0.5,buses.voice.in);
+    else if(cls==='p') noiseBurst(t,0.025,'bandpass',1800,1.5,gain*0.6,buses.voice.in);
+  }
+  /* notes: [{s:'Ve', n:['G'] }] -> Ereignisse */
+  function scheduleLine(singers, notes, t, beat){
+    for(const nt of notes){
+      const info=sylInfo(nt.s);
+      const pitches=nt.n;
+      if(info.on && singers.length) consonant(t, info.on, 0.35);
+      const t0=t+(info.on==='p'?0.03:0);
+      pitches.forEach((p,i)=>{
+        const d=(i===0?beat:beat*0.62)*(nt.long?1.6:1);
+        const f=midi(typeof p==='number'?p:NOTE[p]);
+        singers.forEach(sg=>singNote(sg, t0+ (i? 0 : Math.random()*0.02), d, f, info.v, i<pitches.length-1));
+        t += d;
+      });
+      if(info.coda==='f' && singers.length) consonant(t-0.08,'f',0.25);
+    }
+    return t;
+  }
+  function makeChoir(n, gain){ const s=[]; for(let i=0;i<n;i++) s.push(makeSinger((Math.random()-.5)*16, (i/(Math.max(1,n-1))-0.5)*1.2, gain)); return s; }
+  function freeSingers(singers, t){ singers.forEach(sg=>{ sg.env.gain.setTargetAtTime(0,t,0.15); try{sg.o.stop(t+1); sg.lfo.stop(t+1);}catch(e){} }); }
+
+  /* Hymnus „Veni Creator Spiritus“ – Melodie im VIII. Modus nachempfunden */
+  const VENI_MEL = [
+    [['G'],['A','c'],['c'],['c'],['d','c'],['B'],['A','B'],['c']],
+    [['c'],['d'],['c'],['B'],['A'],['c'],['B','A'],['A']],
+    [['G'],['A'],['c'],['B','A'],['G'],['A'],['F'],['G']],
+    [['A'],['c'],['B'],['A'],['G'],['F','E'],['F','G'],['G']],
+  ];
+  const VENI_SYL = [['Ve','ni','Cre','a','tor','Spi','ri','tus'],['men','tes','tu','o','rum','vi','si','ta'],['im','ple','su','per','na','gra','ti','a'],['quae','tu','cre','a','sti','pec','to','ra'],
+    ['Qui','di','ce','ris','Pa','ra','cli','tus'],['al','tis','si','mi','do','num','De','i'],['fons','vi','vus','ig','nis','ca','ri','tas'],['et','spi','ri','ta','lis','unc','ti','o']];
+
+  let active=[]; // laufende Gesänge
+  function chantSession(){ const s={stopped:false, timers:[], singers:[], resolve:null}; active.push(s); return s; }
+  function endSession(s){ if(s.stopped) return; s.stopped=true; s.timers.forEach(clearTimeout); s.singers.forEach(g=>freeSingers(g, now())); active=active.filter(x=>x!==s); if(s.resolve) s.resolve(); }
+  A.stopChants = () => { active.slice().forEach(endSession); };
+
+  A.veni = (onLine) => {
+    const s=chantSession();
+    const p=new Promise(res=>{ s.resolve=res; });
+    if(!ctx){ let i=0; const step=()=>{ if(s.stopped) return; if(i>=VENI_SYL.length){ endSession(s); return; } onLine&&onLine(i); i++; s.timers.push(setTimeout(step, 3800)); }; step(); return {promise:p, stop:()=>endSession(s)}; }
+    const choir=makeChoir(5,0.55); s.singers.push(choir);
+    let t=now()+0.4; const beat=0.52;
+    VENI_SYL.forEach((syl,li)=>{
+      const mel=VENI_MEL[li%4];
+      const notes=syl.map((x,i)=>({s:x,n:mel[i], long:i===7}));
+      const start=t;
+      s.timers.push(setTimeout(()=>{ if(!s.stopped&&onLine) onLine(li); }, (start-now())*1000));
+      t = scheduleLine(choir, notes, t, beat) + 0.45;
+    });
+    const amen=[{s:'A',n:['G','A','G']},{s:'men',n:['G'],long:true}];
+    s.timers.push(setTimeout(()=>{ if(!s.stopped&&onLine) onLine(-1); }, (t-now())*1000));
+    t = scheduleLine(choir, amen, t, beat)+0.3;
+    s.timers.push(setTimeout(()=>endSession(s), (t-now()+0.8)*1000));
+    return {promise:p, stop:()=>endSession(s)};
+  };
+
+  /* Rezitation auf einem Ton (Kantor oder Chor) */
+  function intoneNotes(text, tone, cadence){
+    const syl=latinSyl(text); const T=NOTE[tone]||57;
+    return syl.map((x,i)=>{
+      let p=T; const fromEnd=syl.length-1-i;
+      if(cadence==='down' && fromEnd===0) p=T-2;
+      if(cadence==='down2' && fromEnd<=1) p=T-2-(fromEnd===0?1:0);
+      if(cadence==='up' && fromEnd===0) p=T+2;
+      return {s:x.s, n:[p], long:x.last};
+    });
+  }
+  A.intone = (text, opts={}) => {
+    const s=chantSession(); const p=new Promise(res=>{ s.resolve=res; });
+    if(!ctx){ s.timers.push(setTimeout(()=>endSession(s), 600+text.length*45)); return {promise:p, stop:()=>endSession(s)}; }
+    const singers = opts.choir? makeChoir(4,0.55) : [makeSinger(0,0,0.9)]; s.singers.push(singers);
+    const beat = opts.beat || 0.2;
+    let t=now()+0.15; t=scheduleLine(singers, intoneNotes(text, opts.tone||'A', opts.cadence||'down'), t, beat);
+    s.timers.push(setTimeout(()=>endSession(s), (t-now()+0.6)*1000));
+    return {promise:p, stop:()=>endSession(s)};
+  };
+
+  /* Allerheiligenlitanei: Kantor ruft an, Chor antwortet, Endlosschleife bis stop() */
+  A.litany = (onLine) => {
+    const s=chantSession(); const p=new Promise(res=>{ s.resolve=res; });
+    let idx=0;
+    const respMel = {'ora pro nobis.':['A','A','G','F','G'], 'orate pro nobis.':['A','A','A','G','F','G'], 'Kyrie, eleison.':['G','A','A','G','F','G','G'], 'Christe, eleison.':['G','A','A','G','F','G','G']};
+    function next(){
+      if(s.stopped) return;
+      const [inv, resp] = TXT.litany[idx]; const li=idx;
+      idx = (idx+1) % TXT.litany.length; if(idx===0) idx=3;
+      onLine && onLine(li, 0);
+      if(!ctx){ s.timers.push(setTimeout(()=>{ onLine&&onLine(li,1); s.timers.push(setTimeout(next, 1800)); }, 1800)); return; }
+      const cantor=[makeSinger(0,0,0.9)]; const choir=makeChoir(5,0.5); s.singers.push(cantor, choir);
+      let t=now()+0.1;
+      const invNotes = inv.startsWith('Kyrie')||inv.startsWith('Christe') ? latinSyl(inv).map((x,i)=>({s:x.s, n:[respMel['Kyrie, eleison.'][i]||'G'], long:x.last})) : intoneNotes(inv,'A','down');
+      t = scheduleLine(cantor, invNotes, t, 0.24)+0.15;
+      const rs=latinSyl(resp); const mel=respMel[resp]||rs.map(()=> 'G');
+      const respNotes = rs.map((x,i)=>({s:x.s, n:[mel[i]||'G'], long:x.last}));
+      s.timers.push(setTimeout(()=>{ onLine&&onLine(li,1); }, (t-now())*1000));
+      t = scheduleLine(choir, respNotes, t, 0.3)+0.35;
+      const tEnd=t;
+      s.timers.push(setTimeout(()=>{ freeSingers(cantor, now()); freeSingers(choir, now()); s.singers=s.singers.filter(g=>g!==cantor&&g!==choir); next(); }, (tEnd-now())*1000));
+    }
+    next();
+    return {promise:p, stop:()=>endSession(s)};
+  };
+
+  /* ---------- Taktgeber ---------- */
+  let coughT=0;
+  function loop(){
+    if(!ctx) return;
+    murmurTick(); stepsTick();
+    if(A.ambientCoughs && Math.random()<0.004 && performance.now()-coughT>6000){ coughT=performance.now(); A.cough(); }
+    setTimeout(loop, 90);
+  }
+  A.ambientCoughs=false;
+  return A;
+})();
+/* ============ GRUNDRISS: Geometrie, Akteure, Darstellung ============ */
+const GEO = (()=>{
+  const G = {};
+  G.chapel = {x0:0,x1:40.9,y0:0,y1:13.4};
+  G.door = {x:40.9, y0:6.0, y1:7.4};
+  G.sala = {x0:42.3,x1:52.5,y0:-1.2,y1:14.6};
+  G.altar = {x0:0.9,x1:2.1,y0:5.5,y1:7.9};
+  G.urn = {x:1.5,y:6.7};
+  G.kneel = {x:3.3,y:6.7};
+  G.altarFront = {x:2.5,y:6.7};
+  G.lectern = {x:4.2,y:6.7};
+  G.scrTable = {x0:2.7,x1:5.5,y0:9.5,y1:10.05};
+  G.scrSeats = [{x:3.0,y:10.5},{x:4.1,y:10.5},{x:5.2,y:10.5}];
+  G.stoveA = {x:38.3,y:12.3}; G.stoveB = {x:39.6,y:12.3};
+  G.transenna = 27.3;
+  G.laneTop=5.25; G.laneBot=8.15; G.lineY=6.7;
+  G.seatX = j => 6.6 + j*0.88 + Math.floor(j/5)*0.7;
+  G.gaps = [6.0, ...[0,1,2].map(b=>(G.seatX(5*b+4)+G.seatX(5*b+5))/2), 26.05];
+  G.rowY = {top:[1.0,2.4,3.8], bot:[12.4,11.0,9.6]};
+  G.seats = [];
+  /* Platzordnung: vorderste Reihen zuerst, nahe am Altar beginnend, abwechselnd links/rechts */
+  for(const r of [2,1,0]) for(let j=0;j<20;j++) for(const side of ['top','bot']) G.seats.push({x:G.seatX(j), y:G.rowY[side][r], side, row:r, j});
+  G.nearestGap = x => G.gaps.reduce((a,b)=>Math.abs(b-x)<Math.abs(a-x)?b:a);
+  G.lane = side => side==='top'?G.laneTop:G.laneBot;
+  G.tableY = (side,row) => side==='top'? G.rowY.top[row]+0.62 : G.rowY.bot[row]-0.62;
+  /* Santa Marta */
+  G.sm = {x0:0,x1:32,y0:0,y1:18, door:{x:32,y:9}};
+  G.smTables = []; for(let r=0;r<3;r++) for(let c=0;c<5;c++) G.smTables.push({x:4+c*6, y:3.4+r*5.6});
+  G.smSeats = []; G.smTables.forEach((t,ti)=>{ for(let k=0;k<8;k++){ const a=k/8*Math.PI*2+0.2; G.smSeats.push({x:t.x+Math.cos(a)*1.45, y:t.y+Math.sin(a)*1.45, t:ti}); } });
+  G.bounds = {chapel:{x0:-1.6,x1:53.6,y0:-2.4,y1:15.8}, chapelNarrow:{x0:-1.6,x1:42.8,y0:-1.2,y1:14.6}, sm:{x0:-1.2,x1:34.2,y0:-1.4,y1:19.4}};
+  return G;
+})();
+
+const SIM = { t:0, speed:3, fast:1, paused:0, timers:[], agents:[], map:'chapel', zones:[], doorClosed:false, flash:[], ballotsOnTables:false, selected:null, hover:null, showPap:true, seal:false };
+function sleep(sec){ return new Promise(r=>SIM.timers.push({at:SIM.t+sec, r})); }
+function realSleep(ms){ return new Promise(r=>setTimeout(r, ms)); }
+
+class Agent{
+  constructor(o){ Object.assign(this,{x:0,y:0,path:[],speed:1.0,visible:true,kind:'card',res:null,writing:0,kneel:0,label:null,white:false,alpha:1}, o); }
+  get moving(){ return this.path.length>0; }
+}
+function walk(a, pts, speed){
+  if(speed) a.speed=speed;
+  return new Promise(res=>{ a.path = pts.map(p=>({x:p.x,y:p.y})); if(a.res) a.res(); a.res=res; if(!a.path.length){ a.res=null; res(); } });
+}
+function teleport(a,x,y){ a.x=x; a.y=y; a.path=[]; if(a.res){const r=a.res; a.res=null; r();} }
+
+/* Wege im Grundriss */
+const PATHS = {
+  seatToLane(seat){ const gx=GEO.nearestGap(seat.x); const ly=GEO.lane(seat.side); const by = seat.side==='top'? seat.y-0.5 : seat.y+0.5; return [{x:seat.x,y:by},{x:gx,y:by},{x:gx,y:ly}]; },
+  laneToSeat(seat){ return PATHS.seatToLane(seat).reverse().concat([{x:seat.x,y:seat.y}]); },
+  entryToSeat(seat){ const ly=GEO.lane(seat.side); const gx=GEO.nearestGap(seat.x); const by = seat.side==='top'? seat.y-0.5 : seat.y+0.5; return [{x:44,y:6.7},{x:41.6,y:6.7},{x:39,y:6.7},{x:30,y:ly},{x:gx,y:ly},{x:gx,y:by},{x:seat.x,y:by},{x:seat.x,y:seat.y}]; },
+  seatToDoor(seat){ return PATHS.seatToLane(seat).concat([{x:30,y:GEO.lane(seat.side)},{x:39,y:6.7},{x:41.6,y:6.7},{x:45,y:6.7}]); },
+};
+
+/* Warteschlange vor Altar oder Pult */
+class Queue{
+  constructor(service, opts={}){ this.list=[]; this.busy=false; this.service=service; this.x0=opts.x0||5.4; this.dx=opts.dx||0.72; }
+  slot(k){ return {x:this.x0+k*this.dx, y:GEO.lineY}; }
+  join(a){ return new Promise(res=>{ this.list.push({a,res}); this.reposition(); }); }
+  reposition(){ this.list.forEach((e,k)=>{ const s=this.slot(k); const p=e.a.path; if(!p.length){ if(Math.hypot(e.a.x-s.x,e.a.y-s.y)>0.05) p.push(s); } else { const last=p[p.length-1]; if(Math.hypot(last.x-s.x,last.y-s.y)>0.05) p[p.length-1]=s; } }); }
+  tick(){
+    if(this.busy || !this.list.length) return;
+    const e=this.list[0]; const s=this.slot(0);
+    if(Math.hypot(e.a.x-s.x, e.a.y-s.y)<0.12 && !e.a.path.length){
+      this.busy=true; this.list.shift(); this.reposition();
+      this.service(e.a).then(()=>{ this.busy=false; e.res(); });
+    }
+  }
+}
+SIM.queues=[];
+
+/* ---------- Darstellung ---------- */
+const PLAN = (()=>{
+  const P={};
+  let cv, cx, base, bctx, W=0, H=0, dpr=1, scale=1, ox=0, oy=0, bounds=GEO.bounds.chapel;
+  const C = {paper:'#ece2cb', paper2:'#e4d7ba', grid:'#e1d4b6', grid5:'#d4c3a0', ink:'#3a2e24', ink2:'#6b5a47', red:'#a3262a', redD:'#6e1519', redC:'#7e1a1f', gold:'#c18f32', lapis:'#2f4f73', mc:'#40304f', grey:'#8d8473', white:'#fbf7ee', table:'#cdb88f'};
+  P.C=C;
+  P.init = (canvas) => { cv=canvas; cx=cv.getContext('2d'); base=document.createElement('canvas'); bctx=base.getContext('2d'); P.resize(); };
+  P.toScreen = (x,y) => [ox+(x-bounds.x0)*scale, oy+(y-bounds.y0)*scale];
+  P.toWorld = (sx,sy) => [(sx-ox)/scale+bounds.x0, (sy-oy)/scale+bounds.y0];
+  P.resize = () => {
+    const wrap=cv.parentElement; const w=wrap.clientWidth;
+    const narrow = w<720 && SIM.map==='chapel';
+    bounds = SIM.map==='sm'? GEO.bounds.sm : (narrow? GEO.bounds.chapelNarrow : GEO.bounds.chapel);
+    const bw=bounds.x1-bounds.x0, bh=bounds.y1-bounds.y0;
+    let h = w*bh/bw; const maxH = Math.max(220, window.innerHeight*0.56); if(h>maxH) h=maxH;
+    W=w; H=Math.round(h); dpr=window.devicePixelRatio||1;
+    cv.width=W*dpr; cv.height=H*dpr; cv.style.height=H+'px'; base.width=W*dpr; base.height=H*dpr;
+    scale=Math.min(W/bw, H/bh); ox=(W-bw*scale)/2; oy=(H-bh*scale)/2;
+    drawBase();
+  };
+  function L(x){ return x*scale; }
+  function rect(c,x0,y0,x1,y1){ const [a,b]=P.toScreen(x0,y0), [d,e]=P.toScreen(x1,y1); c.rect(a,b,d-a,e-b); }
+  function text(c,s,x,y,o={}){ const [a,b]=P.toScreen(x,y); c.save(); c.fillStyle=o.color||C.ink2; c.font=`${o.italic?'italic ':''}${o.size||11}px ${o.font||'"Alegreya Sans SC", "Alegreya", Georgia, serif'}`; c.textAlign=o.align||'center'; c.textBaseline='middle'; if(o.rot){ c.translate(a,b); c.rotate(o.rot); c.fillText(s,0,0);} else c.fillText(s,a,b); c.restore(); }
+  function hatchRect(c,x0,y0,x1,y1){ c.save(); c.beginPath(); rect(c,x0,y0,x1,y1); c.clip(); c.fillStyle=C.paper2; c.fill(); c.strokeStyle=C.ink2; c.lineWidth=0.6; c.beginPath(); for(let d=-60;d<120;d+=0.45){ const [a,b]=P.toScreen(x0+d,y0), [e,f]=P.toScreen(x0+d-(y1-y0+60),y1+60); c.moveTo(a,b); c.lineTo(e,f);} c.stroke(); c.restore(); }
+
+  function drawBase(){
+    const c=bctx; c.setTransform(dpr,0,0,dpr,0,0); c.clearRect(0,0,W,H);
+    c.fillStyle=C.paper; c.fillRect(0,0,W,H);
+    const r=mulberry(7); c.fillStyle='rgba(120,90,50,0.05)'; for(let i=0;i<W*H/90;i++){ c.fillRect(r()*W, r()*H, 1.2, 1.2); }
+    c.lineWidth=0.5;
+    for(let x=Math.ceil(bounds.x0);x<=bounds.x1;x++){ c.strokeStyle = x%5===0? C.grid5 : C.grid; const [a]=P.toScreen(x,0); c.beginPath(); c.moveTo(a,0); c.lineTo(a,H); c.stroke(); }
+    for(let y=Math.ceil(bounds.y0);y<=bounds.y1;y++){ c.strokeStyle = y%5===0? C.grid5 : C.grid; const [,b]=P.toScreen(0,y); c.beginPath(); c.moveTo(0,b); c.lineTo(W,b); c.stroke(); }
+    if(SIM.map==='sm') drawSM(c); else drawChapel(c);
+  }
+  function drawChapel(c){
+    const ch=GEO.chapel, s=GEO.sala, t=0.75;
+    /* Sala Regia */
+    c.fillStyle='#e6dabd'; c.beginPath(); rect(c,s.x0,s.y0,s.x1,s.y1); c.fill();
+    c.save(); c.beginPath(); rect(c,s.x0,s.y0,s.x1,s.y1); c.clip(); c.strokeStyle='rgba(58,46,36,0.12)'; c.lineWidth=0.6; for(let x=s.x0;x<s.x1;x+=1.4){ for(let y=s.y0;y<s.y1;y+=1.4){ c.beginPath(); rect(c,x+0.1,y+0.1,x+1.3,y+1.3); c.stroke(); } } c.restore();
+    c.strokeStyle=C.ink; c.lineWidth=Math.max(1.2,L(0.18)); c.beginPath(); rect(c,s.x0,s.y0,s.x1,s.y1); c.stroke();
+    c.fillStyle=C.paper; c.beginPath(); rect(c,s.x1-0.1,5.9,s.x1+0.3,7.5); c.fill();
+    text(c,'Sala Regia',(s.x0+s.x1)/2, 1.4,{size:Math.max(10,L(0.75)), color:C.ink2});
+    text(c,'zur Cappella Paolina →',(s.x0+s.x1)/2+1.6, 12.9,{size:Math.max(9,L(0.5)), italic:true, font:'"Alegreya", Georgia, serif'});
+    /* Vorraum zur Tür */
+    c.fillStyle='#e6dabd'; c.beginPath(); rect(c,ch.x1,5.6,s.x0,7.8); c.fill(); c.strokeStyle=C.ink; c.lineWidth=1; c.beginPath(); const [a1,b1]=P.toScreen(ch.x1+t,5.6),[a2,b2]=P.toScreen(s.x0,5.6),[a3,b3]=P.toScreen(ch.x1+t,7.8),[a4,b4]=P.toScreen(s.x0,7.8); c.moveTo(a1,b1); c.lineTo(a2,b2); c.moveTo(a3,b3); c.lineTo(a4,b4); c.stroke();
+    /* Mauern */
+    hatchRect(c,ch.x0-t,ch.y0-t,ch.x1+t,ch.y0); hatchRect(c,ch.x0-t,ch.y1,ch.x1+t,ch.y1+t); hatchRect(c,ch.x0-t-0.5,ch.y0,ch.x0,ch.y1); hatchRect(c,ch.x1,ch.y0,ch.x1+t,GEO.door.y0); hatchRect(c,ch.x1,GEO.door.y1,ch.x1+t,ch.y1);
+    c.strokeStyle=C.ink; c.lineWidth=1.3; c.beginPath(); rect(c,ch.x0-t-0.5,ch.y0-t,ch.x1+t,ch.y1+t); c.stroke(); c.lineWidth=1; c.beginPath(); rect(c,ch.x0,ch.y0,ch.x1,ch.y1); c.stroke();
+    /* Fenster */
+    c.fillStyle=C.paper; c.strokeStyle=C.ink2; c.lineWidth=0.8;
+    [5.6,12.1,18.6,25.1,31.6,38.1].forEach(x=>{ [[ch.y0-t,ch.y0],[ch.y1,ch.y1+t]].forEach(([y0,y1])=>{ c.beginPath(); rect(c,x-0.9,y0,x+0.9,y1); c.fill(); c.stroke(); const [p,q]=P.toScreen(x-0.9,(y0+y1)/2),[p2]=P.toScreen(x+0.9,0); c.beginPath(); c.moveTo(p,q); c.lineTo(p2,q); c.stroke(); }); });
+    /* Altarbereich */
+    c.fillStyle='rgba(193,143,50,0.10)'; c.beginPath(); rect(c,0,3.6,3.0,9.8); c.fill(); c.strokeStyle=C.ink2; c.lineWidth=0.6; c.setLineDash([3,2]); c.beginPath(); rect(c,0,3.6,3.0,9.8); c.stroke(); c.setLineDash([]);
+    c.fillStyle='#dcc28a'; c.strokeStyle=C.ink; c.lineWidth=1; c.beginPath(); rect(c,GEO.altar.x0,GEO.altar.y0,GEO.altar.x1,GEO.altar.y1); c.fill(); c.stroke();
+    text(c,'Jüngstes Gericht',-1.05,6.7,{rot:-Math.PI/2, size:Math.max(8,L(0.42)), color:C.ink2});
+    /* Lesepult */
+    c.fillStyle='#d9c7a0'; c.beginPath(); rect(c,GEO.lectern.x-0.25,GEO.lectern.y-0.3,GEO.lectern.x+0.25,GEO.lectern.y+0.3); c.fill(); c.stroke();
+    /* Tisch der Skrutatoren */
+    c.fillStyle=C.table; c.beginPath(); rect(c,GEO.scrTable.x0,GEO.scrTable.y0,GEO.scrTable.x1,GEO.scrTable.y1); c.fill(); c.strokeStyle=C.ink2; c.stroke();
+    /* Bodenmosaik */
+    c.strokeStyle='rgba(58,46,36,0.16)'; c.lineWidth=0.8; [30.5,33.6,36.7].forEach(x=>{ const [a,b]=P.toScreen(x,6.7); c.beginPath(); c.arc(a,b,L(1.1),0,7); c.stroke(); c.beginPath(); c.arc(a,b,L(0.6),0,7); c.stroke(); });
+    /* Transenna */
+    c.strokeStyle=C.ink2; c.lineWidth=Math.max(1.4,L(0.2)); c.setLineDash([4,3]); c.beginPath(); let [tx,ty]=P.toScreen(GEO.transenna,0.4),[,ty2]=P.toScreen(0,5.4); c.moveTo(tx,ty); c.lineTo(tx,ty2); [,ty]=P.toScreen(0,8.0); [,ty2]=P.toScreen(0,13.0); c.moveTo(tx,ty); c.lineTo(tx,ty2); c.stroke(); c.setLineDash([]);
+    text(c,'Transenna',GEO.transenna+1.5,0.55,{size:Math.max(8,L(0.42))});
+    /* Tische */
+    c.fillStyle=C.table; c.strokeStyle=C.ink2; c.lineWidth=0.7;
+    for(const side of ['top','bot']) for(let row=0;row<3;row++) for(let b=0;b<4;b++){ const x0=GEO.seatX(5*b)-0.42, x1=GEO.seatX(5*b+4)+0.42, ty=GEO.tableY(side,row); c.beginPath(); rect(c,x0,ty-0.2,x1,ty+0.2); c.fill(); c.stroke(); }
+    /* Stühle */
+    c.fillStyle='rgba(58,46,36,0.12)'; GEO.seats.forEach(s=>{ c.beginPath(); rect(c,s.x-0.3,s.y-0.3,s.x+0.3,s.y+0.3); c.fill(); });
+    /* Öfen */
+    const [sa,sb]=P.toScreen(GEO.stoveA.x,GEO.stoveA.y); c.fillStyle='#b8a88a'; c.strokeStyle=C.ink; c.beginPath(); c.arc(sa,sb,L(0.45),0,7); c.fill(); c.stroke();
+    c.beginPath(); rect(c,GEO.stoveB.x-0.4,GEO.stoveB.y-0.4,GEO.stoveB.x+0.4,GEO.stoveB.y+0.4); c.fill(); c.stroke();
+    c.strokeStyle=C.ink; c.lineWidth=Math.max(1,L(0.12)); c.beginPath(); const [k1,k2]=P.toScreen(GEO.stoveA.x,GEO.stoveA.y-0.45),[k3,k4]=P.toScreen(GEO.stoveB.x,GEO.stoveB.y-0.4),[k5,k6]=P.toScreen(39.0,11.3),[k7,k8]=P.toScreen(40.3,11.3); c.moveTo(k1,k2); c.lineTo(k5,k6); c.moveTo(k3,k4); c.lineTo(k5,k6); c.lineTo(k7,k8); c.stroke();
+    text(c,'Öfen',38.95,10.7,{size:Math.max(8,L(0.42))});
+    /* Maßstab und Kompass */
+    const [m0,m1]=P.toScreen(0.2,15.0),[m2]=P.toScreen(10.2,15.0); c.strokeStyle=C.ink; c.lineWidth=1; c.beginPath(); c.moveTo(m0,m1); c.lineTo(m2,m1); for(let i=0;i<=10;i+=5){ const [q]=P.toScreen(0.2+i,0); c.moveTo(q,m1-3); c.lineTo(q,m1+3);} c.stroke();
+    if(bounds.y1>15) { text(c,'0',0.2,15.45,{size:9}); text(c,'5',5.2,15.45,{size:9}); text(c,'10 m',10.2,15.45,{size:9}); }
+    text(c,'Cappella Sistina',20.4,-1.55,{size:Math.max(10,L(0.7)), color:C.ink});
+  }
+  function drawSM(c){
+    const s=GEO.sm;
+    c.fillStyle='#e8dcc0'; c.beginPath(); rect(c,s.x0,s.y0,s.x1,s.y1); c.fill();
+    c.strokeStyle=C.ink; c.lineWidth=Math.max(2,L(0.35)); c.beginPath(); rect(c,s.x0,s.y0,s.x1,s.y1); c.stroke();
+    c.fillStyle=C.paper; c.beginPath(); rect(c,s.x1-0.3,8,s.x1+0.3,10); c.fill();
+    c.strokeStyle=C.ink2; c.lineWidth=0.8; for(let x=3;x<32;x+=4.5){ c.beginPath(); rect(c,x,-0.25,x+2,0.25); c.stroke(); c.beginPath(); rect(c,x,17.75,x+2,18.25); c.stroke(); }
+    GEO.smTables.forEach(t=>{ const [a,b]=P.toScreen(t.x,t.y); c.fillStyle='#f6f0e2'; c.strokeStyle=C.ink2; c.lineWidth=1; c.beginPath(); c.arc(a,b,L(1.0),0,7); c.fill(); c.stroke(); c.beginPath(); c.arc(a,b,L(0.75),0,7); c.strokeStyle='rgba(58,46,36,0.2)'; c.stroke(); });
+    text(c,'Domus Sanctae Marthae · Speisesaal',16,-0.8,{size:Math.max(10,L(0.6)), color:C.ink});
+  }
+
+  P.draw = () => {
+    if(!cv) return;
+    const c=cx; c.setTransform(1,0,0,1,0,0); c.drawImage(base,0,0); c.setTransform(dpr,0,0,dpr,0,0);
+    const now=performance.now()/1000;
+    if(SIM.map==='chapel'){
+      /* Tür */
+      const [d1,d2]=P.toScreen(GEO.door.x,GEO.door.y0),[d3,d4]=P.toScreen(GEO.door.x+0.75,GEO.door.y1);
+      if(SIM.doorClosed){ c.fillStyle='#7c5f40'; c.fillRect(d1,d2,d3-d1,d4-d2); if(SIM.seal){ c.fillStyle=C.red; c.beginPath(); c.arc((d1+d3)/2,(d2+d4)/2,Math.max(2.5,L(0.22)),0,7); c.fill(); } }
+      else { c.strokeStyle='#7c5f40'; c.lineWidth=Math.max(1.5,L(0.12)); c.beginPath(); c.moveTo(d3,d2); c.lineTo(d3+L(0.9),d2-L(0.5)); c.moveTo(d3,d4); c.lineTo(d3+L(0.9),d4+L(0.5)); c.stroke(); }
+      /* Urne und Patene */
+      const [u1,u2]=P.toScreen(GEO.urn.x,GEO.urn.y); c.fillStyle=C.gold; c.strokeStyle=C.ink; c.lineWidth=0.8; c.beginPath(); c.arc(u1,u2,Math.max(3,L(0.32)),0,7); c.fill(); c.stroke();
+      c.fillStyle='#e7d4a3'; c.beginPath(); c.arc(u1,u2,Math.max(1.5,L(0.16)),0,7); c.fill();
+      /* Zettel auf den Tischen */
+      if(SIM.ballotsOnTables){ c.fillStyle=C.white; c.strokeStyle='rgba(58,46,36,0.5)'; c.lineWidth=0.5; SIM.agents.forEach(a=>{ if(a.kind==='card' && a.seat && a.hasBallot){ const ty=GEO.tableY(a.seat.side,a.seat.row); const [p,q]=P.toScreen(a.seat.x-0.13,ty-0.12); c.fillRect(p,q,L(0.26),L(0.2)); c.strokeRect(p,q,L(0.26),L(0.2)); } }); }
+      if(SIM.pileCount){ const [p,q]=P.toScreen(4.1,9.78); c.fillStyle=C.white; for(let i=0;i<Math.min(8,Math.ceil(SIM.pileCount/15));i++){ c.fillRect(p-L(0.2)+i*0.6,q-L(0.12)-i*0.8,L(0.4),L(0.25)); c.strokeStyle='rgba(58,46,36,.5)'; c.strokeRect(p-L(0.2)+i*0.6,q-L(0.12)-i*0.8,L(0.4),L(0.25)); } }
+    }
+    /* Zonen (Aufgaben) */
+    SIM.zones.forEach(z=>{
+      const pulse = 0.5+0.5*Math.sin(now*4);
+      c.save(); c.strokeStyle=C.gold; c.lineWidth=2; c.setLineDash([5,4]); c.lineDashOffset=-now*20; c.fillStyle=`rgba(193,143,50,${0.10+0.12*pulse})`;
+      c.beginPath(); if(z.r){ const [a,b]=P.toScreen(z.x,z.y); c.arc(a,b,L(z.r),0,7); } else rect(c,z.x0,z.y0,z.x1,z.y1); c.fill(); c.stroke(); c.restore();
+      if(z.label){ const lx = z.r? z.x : (z.x0+z.x1)/2, ly = z.r? z.y - z.r - 0.6 : z.y0-0.55; text(c,z.label,lx,ly,{size:11,color:C.ink, font:'"Alegreya Sans SC", Georgia, serif'}); }
+    });
+    /* Akteure */
+    const r=Math.max(2.6, L(0.32));
+    for(const a of SIM.agents){
+      if(!a.visible) continue;
+      const [x,y]=P.toScreen(a.x,a.y);
+      c.globalAlpha=a.alpha;
+      if(a.kind==='card'||a.kind==='pope'){
+        c.fillStyle = a.white? '#fbf8f0' : C.red; c.strokeStyle = a.white? '#b9ad94' : C.redD; c.lineWidth=0.8;
+        c.beginPath(); c.arc(x,y,r*(a.kneel?0.85:1),0,7); c.fill(); c.stroke();
+        c.fillStyle = a.white? '#ffffff' : C.redC; c.beginPath(); c.arc(x,y,r*0.42,0,7); c.fill();
+        if(a.isPlayer){ c.strokeStyle=C.gold; c.lineWidth=2; c.beginPath(); c.arc(x,y,r+2.4,0,7); c.stroke(); }
+        else if(SIM.showPap && a.pap && !a.white){ c.strokeStyle = a.withdrawn? '#8d8473' : C.gold; c.lineWidth=1.2; c.setLineDash([2,2]); c.beginPath(); c.arc(x,y,r+2.2,0,7); c.stroke(); c.setLineDash([]); }
+        if(a.writing>0){ c.strokeStyle=C.ink; c.lineWidth=1; const w=Math.sin(now*14+a.id)*r*0.5; c.beginPath(); c.moveTo(x+r*0.3+w,y+r*1.5); c.lineTo(x+r*0.9+w,y+r*0.9); c.stroke(); }
+      } else if(a.kind==='mc'){ c.fillStyle=C.mc; c.beginPath(); c.arc(x,y,r*0.9,0,7); c.fill(); c.fillStyle=C.white; c.fillRect(x-r*0.25,y-r*0.15,r*0.5,r*0.3); }
+      else if(a.kind==='guard'){ c.fillStyle='#2b4f8f'; c.beginPath(); c.arc(x,y,r*0.85,Math.PI/2,Math.PI*1.5); c.fill(); c.fillStyle='#e0a826'; c.beginPath(); c.arc(x,y,r*0.85,-Math.PI/2,Math.PI/2); c.fill(); }
+      else { c.fillStyle=C.grey; c.beginPath(); c.arc(x,y,r*0.85,0,7); c.fill(); }
+      c.globalAlpha=1;
+      if(a.carry){ c.fillStyle=C.white; c.strokeStyle=C.ink; c.lineWidth=0.5; c.fillRect(x+r*0.6,y-r*1.4,r*0.9,r*0.7); c.strokeRect(x+r*0.6,y-r*1.4,r*0.9,r*0.7); }
+      if(a.box){ c.fillStyle=C.gold; c.fillRect(x+r*0.5,y-r*1.3,r*1.1,r*0.9); }
+      if(a.label || SIM.hover===a || SIM.selected===a){
+        const s = a.label || (a.cid!=null? COLLEGE[a.cid].short : '');
+        if(s){ c.font='600 11px "Alegreya Sans SC", Georgia, sans-serif'; const w=c.measureText(s).width; c.fillStyle='rgba(236,226,203,0.9)'; c.fillRect(x-w/2-3,y-r-16,w+6,13); c.fillStyle=C.ink; c.textAlign='center'; c.textBaseline='middle'; c.fillText(s,x,y-r-9.5); }
+      }
+    }
+    /* Lichtblitze (Hinweise) */
+    SIM.flash = SIM.flash.filter(f=>now-f.t<1.2);
+    SIM.flash.forEach(f=>{ const k=(now-f.t)/1.2; const [x,y]=P.toScreen(f.x,f.y); c.strokeStyle=`rgba(193,143,50,${1-k})`; c.lineWidth=2; c.beginPath(); c.arc(x,y,r+4+k*18,0,7); c.stroke(); });
+  };
+  P.agentAt = (sx,sy) => { const [wx,wy]=P.toWorld(sx,sy); let best=null, bd=Math.max(0.55, 7/scale); for(const a of SIM.agents){ if(!a.visible||a.cid==null) continue; const d=Math.hypot(a.x-wx,a.y-wy); if(d<bd){bd=d;best=a;} } return best; };
+  P.zoneAt = (sx,sy) => { const [wx,wy]=P.toWorld(sx,sy); return SIM.zones.find(z=> z.r? Math.hypot(wx-z.x,wy-z.y)<z.r+0.3 : (wx>=z.x0-0.2&&wx<=z.x1+0.2&&wy>=z.y0-0.2&&wy<=z.y1+0.2)); };
+  P.setMap = m => { SIM.map=m; P.resize(); };
+  return P;
+})();
+
+function simUpdate(dt){
+  if(SIM.paused>0) return;
+  const g = dt*SIM.speed*SIM.fast;
+  SIM.t += g;
+  if(SIM.timers.length){ const due=SIM.timers.filter(t=>t.at<=SIM.t); if(due.length){ SIM.timers=SIM.timers.filter(t=>t.at>SIM.t); due.forEach(t=>t.r()); } }
+  let walking=0;
+  for(const a of SIM.agents){
+    if(a.writing>0) a.writing=Math.max(0,a.writing-g);
+    if(!a.path.length) continue;
+    let rem=a.speed*g;
+    while(rem>0 && a.path.length){
+      const p=a.path[0]; const dx=p.x-a.x, dy=p.y-a.y, d=Math.hypot(dx,dy);
+      if(d<=rem){ a.x=p.x; a.y=p.y; a.path.shift(); rem-=d; }
+      else { a.x+=dx/d*rem; a.y+=dy/d*rem; rem=0; }
+    }
+    if(a.visible && a.alpha>0.5) walking++;
+    if(!a.path.length && a.res){ const r=a.res; a.res=null; r(); }
+  }
+  SIM.queues.forEach(q=>q.tick());
+  AUDIO.setWalkers(SIM.map==='chapel' ? Math.min(walking,8) : 0);
+}
+/* ============ FRESKO-SZENEN (SVG) ============ */
+const FR = {lapis:'#2c4a70', lapisD:'#1d3352', ochre:'#d4ab64', ochreL:'#e6cc95', umber:'#7a5a3c', umberD:'#4b3726', cream:'#efe2c3', red:'#a3262a', redD:'#741a1e', gold:'#c99b45', goldL:'#e2c27a', flesh:'#e0bf98', green:'#6d7f57', stone:'#d8cbae', stoneD:'#b9a988', night:'#1a2236'};
+const SCN = {};
+SCN.defs = () => `<defs>
+<filter id="grain" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="4" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 0.30  0 0 0 0 0.22  0 0 0 0 0.14  0 0 0 0.28 0"/></filter>
+<filter id="soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="5"/></filter>
+<radialGradient id="glow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#fff6d8" stop-opacity=".9"/><stop offset="1" stop-color="#fff6d8" stop-opacity="0"/></radialGradient>
+<linearGradient id="dusk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2d4466"/><stop offset=".55" stop-color="#7a87a0"/><stop offset="1" stop-color="#e3b48a"/></linearGradient>
+<linearGradient id="nightsky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#121a2c"/><stop offset="1" stop-color="#2b3550"/></linearGradient>
+<linearGradient id="shaft" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff4d6" stop-opacity=".55"/><stop offset="1" stop-color="#fff4d6" stop-opacity="0"/></linearGradient>
+</defs>`;
+SCN.grain = () => `<rect width="1600" height="900" filter="url(#grain)" style="pointer-events:none;mix-blend-mode:multiply"/>`;
+
+/* Figuren: Kardinal (frontal), mit Mitra oder Pileolus */
+function figure(x,y,s,o={}){
+  const body=o.white?'#f7f3ea':FR.red, cape=o.white?'#ffffff':FR.redD, cap=o.white?'#ffffff':FR.red;
+  const id=o.id?`id="${o.id}"`:'';
+  let head=`<circle cx="0" cy="-58" r="11" fill="${FR.flesh}"/>`;
+  if(o.mitre) head+=`<path d="M-11 -64 L-9 -88 Q0 -98 9 -88 L11 -64 Z" fill="#f4eee0" stroke="${FR.gold}" stroke-width="1.5"/><path d="M0 -94 V-64" stroke="${FR.gold}" stroke-width="2"/>`;
+  else head+=`<path d="M-9 -63 A10 10 0 0 1 9 -63 Z" fill="${cap}"/>`;
+  const arm = o.arms? `<path d="M-14 -38 L-34 -70 M14 -38 L34 -70" stroke="${body}" stroke-width="8" stroke-linecap="round"/>` : '';
+  const paper = o.paper? `<rect x="10" y="-40" width="14" height="18" fill="#fbf6ea" stroke="${FR.umber}" stroke-width="1"/>`:'';
+  return `<g ${id} transform="translate(${x} ${y}) scale(${s})" class="${o.cls||''}">${arm}<path d="M-20 0 L-15 -40 Q0 -50 15 -40 L20 0 Z" fill="${body}"/><path d="M-16 -36 Q0 -50 16 -36 L14 -24 Q0 -18 -14 -24 Z" fill="${cape}"/>${o.white?`<path d="M-6 -30 V0" stroke="#e8dcc0" stroke-width="2"/>`:''}${head}${paper}</g>`;
+}
+function crowdDots(y0,y1,n,seed,flags){
+  const r=mulberry(seed); let s='';
+  const cols=['#3b3328','#4a3f31','#2f2a24','#5b4c3a','#6a5843'];
+  for(let i=0;i<n;i++){ const y=y0+(y1-y0)*Math.pow(r(),0.7), x=r()*1600, rr=3+ (y-y0)/(y1-y0)*7; s+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${rr.toFixed(1)}" fill="${cols[i%5]}"/>`; }
+  if(flags){ const fc=[['#e8c547','#ffffff'],['#a3262a','#ffffff'],['#2c4a70','#e2c27a'],['#3b7d4a','#ffffff'],['#c4462b','#e8c547']]; for(let i=0;i<22;i++){ const x=r()*1600, y=y0+(y1-y0)*(0.2+r()*0.6), c=fc[i%5]; s+=`<g class="flag" style="animation-delay:${(r()*2).toFixed(2)}s"><path d="M${x} ${y} V${y-60}" stroke="#3b3328" stroke-width="2"/><rect x="${x}" y="${y-60}" width="28" height="9" fill="${c[0]}"/><rect x="${x}" y="${y-51}" width="28" height="9" fill="${c[1]}"/></g>`; } }
+  return s;
+}
+
+/* Sixtinische Kapelle, Blick zur Altarwand */
+SCN.chapel = (o={}) => {
+  let s=`<rect width="1600" height="900" fill="${FR.cream}"/>`;
+  s+=`<rect width="1600" height="150" fill="${FR.lapisD}"/>`;
+  for(let i=0;i<6;i++){ const x=40+i*262; s+=`<rect x="${x}" y="18" width="230" height="112" fill="${FR.ochre}"/><rect x="${x+14}" y="30" width="202" height="88" fill="${[FR.ochreL,'#c9b08a','#b9a585',FR.ochreL,'#c9b08a','#b9a585'][i]}"/><circle cx="${x+115}" cy="74" r="20" fill="${FR.flesh}" opacity=".55"/>`; }
+  s+=`<polygon points="0,150 520,215 520,640 0,900" fill="#e4d4b0"/><polygon points="1600,150 1080,215 1080,640 1600,900" fill="#e4d4b0"/>`;
+  for(let i=0;i<3;i++){ const f=i/3; const x0=0+f*520, x1=x0+150*(1-f*0.6), yt=150+65*f+20; s+=`<path d="M${x0+20} ${yt+150*(1-f*.5)} V${yt+40} Q${(x0+x1)/2} ${yt-10} ${x1-10} ${yt+40} V${yt+150*(1-f*.5)} Z" fill="${FR.lapis}" opacity=".85"/>`; const X0=1600-x0, X1=1600-x1; s+=`<path d="M${X0-20} ${yt+150*(1-f*.5)} V${yt+40} Q${(X0+X1)/2} ${yt-10} ${X1+10} ${yt+40} V${yt+150*(1-f*.5)} Z" fill="${FR.lapis}" opacity=".85"/>`; }
+  for(let i=0;i<14;i++){ const f=i/14; const x=f*520, y0=480+f*95, y1=900-f*260+0; s+=`<path d="M${x} ${y0+30} V${y1-60}" stroke="#cdbb93" stroke-width="${10*(1-f*0.7)}"/>`; s+=`<path d="M${1600-x} ${y0+30} V${y1-60}" stroke="#cdbb93" stroke-width="${10*(1-f*0.7)}"/>`; }
+  s+=`<path d="M520 640 V250 Q520 215 560 215 H1040 Q1080 215 1080 250 V640 Z" fill="${FR.lapis}"/>`;
+  s+=`<circle cx="800" cy="330" r="70" fill="${FR.goldL}" opacity=".55"/><circle cx="800" cy="330" r="38" fill="${FR.gold}"/>`;
+  const r=mulberry(11); for(let i=0;i<120;i++){ const a=r()*Math.PI*2, d=90+r()*190; const x=800+Math.cos(a)*d*1.25, y=350+Math.sin(a)*d*0.75; if(y>240&&y<600&&x>540&&x<1060) s+=`<circle cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" r="${(3+r()*4).toFixed(1)}" fill="${FR.flesh}" opacity="${(.5+r()*.4).toFixed(2)}"/>`; }
+  s+=`<rect x="520" y="560" width="560" height="80" fill="${FR.green}" opacity=".55"/>`;
+  s+=`<polygon points="0,900 1600,900 1080,640 520,640" fill="#d9c7a1"/>`;
+  for(let i=1;i<9;i++){ const f=i/9; const y=640+260*f*f; s+=`<path d="M${520-520*f*f} ${y} H${1080+520*f*f}" stroke="${FR.umber}" stroke-width="1" opacity=".35"/>`; }
+  [[800,700,40],[800,800,70]].forEach(([x,y,rr])=>{ s+=`<ellipse cx="${x}" cy="${y}" rx="${rr*2}" ry="${rr*0.5}" fill="none" stroke="${FR.umber}" stroke-width="2" opacity=".45"/><ellipse cx="${x}" cy="${y}" rx="${rr*1.2}" ry="${rr*0.3}" fill="none" stroke="${FR.red}" stroke-width="2" opacity=".35"/>`; });
+  s+=`<rect x="730" y="606" width="140" height="40" fill="${FR.cream}" stroke="${FR.gold}" stroke-width="2"/><path d="M800 560 V606 M786 574 H814" stroke="${FR.gold}" stroke-width="4"/>`;
+  [744,856].forEach(x=>{ s+=`<rect x="${x-3}" y="582" width="6" height="24" fill="${FR.gold}"/><ellipse class="flame" cx="${x}" cy="576" rx="4" ry="7" fill="#f4c35b"/>`; });
+  /* Tische und Kardinäle in der Tiefe */
+  s+=`<polygon points="40,900 230,900 520,668 500,662" fill="#cdb88f"/><polygon points="1560,900 1370,900 1080,668 1100,662" fill="#cdb88f"/>`;
+  const figs=[];
+  for(let i=0;i<9;i++){ const f=i/9; figs.push([60+f*430, 860-f*190, 1.55-f*1.05]); }
+  figs.reverse().forEach(([x,y,sc])=>{ s+=figure(x,y,sc); s+=figure(1600-x,y,sc); });
+  if(o.lectern) s+=`<g><rect x="770" y="640" width="60" height="70" fill="${FR.umber}"/><path d="M752 690 L848 690 L834 668 L766 668 Z" fill="${FR.umberD}"/><rect x="776" y="664" width="48" height="10" fill="${FR.red}"/><rect x="782" y="660" width="36" height="6" fill="${FR.gold}"/></g>${figure(870,790,1.9,{arms:false})}`;
+  if(o.accept) s+= figure(700,712,1.75,{paper:true, id:'dean'}) + figure(905,700,1.7,{id:'berg', cls:'berg-fig'});
+  if(o.pope) s+= figure(800,820,2.3,{white:true, id:'pope'});
+  return s;
+};
+
+/* Petersdom: Missa pro eligendo Romano Pontifice */
+SCN.basilica = () => {
+  let s=`<rect width="1600" height="900" fill="#d9c08c"/>`;
+  s+=`<path d="M0 0 H1600 V160 H0 Z" fill="${FR.ochre}"/>`;
+  for(let i=0;i<12;i++) s+=`<rect x="${i*140+10}" y="20" width="110" height="110" fill="#c79e57" stroke="${FR.gold}" stroke-width="3"/><circle cx="${i*140+65}" cy="75" r="20" fill="${FR.goldL}" opacity=".6"/>`;
+  s+=`<path d="M0 160 H330 V900 H0 Z M1270 160 H1600 V900 H1270 Z" fill="#cdb380"/><path d="M60 900 V340 Q165 200 270 340 V900 Z M1330 900 V340 Q1435 200 1540 340 V900 Z" fill="#a98d5c"/>`;
+  s+=`<path d="M330 900 V300 Q800 40 1270 300 V900 Z" fill="#e3cf9f"/>`;
+  s+=`<ellipse cx="800" cy="330" rx="150" ry="130" fill="url(#glow)"/>`;
+  s+=`<g class="rays">`; for(let i=0;i<24;i++){ const a=i/24*Math.PI*2; s+=`<path d="M800 330 L${800+Math.cos(a)*240} ${330+Math.sin(a)*190}" stroke="${FR.gold}" stroke-width="5" opacity=".55"/>`; } s+=`</g>`;
+  s+=`<ellipse cx="800" cy="330" rx="62" ry="54" fill="#f6e7b6"/><path d="M782 330 L800 318 L818 330 L800 342 Z M770 326 L784 330 L770 334 Z M830 326 L816 330 L830 334 Z" fill="#fffaf0"/>`;
+  s+=`<polygon points="560,0 640,0 760,620 660,620" fill="url(#shaft)"/><polygon points="980,0 1040,0 960,620 880,620" fill="url(#shaft)"/>`;
+  [600,700,900,1000].forEach(x=>{ let p=`M${x} 640`; for(let y=640;y>300;y-=22){ p+=` Q${x+14} ${y-11} ${x} ${y-22} Q${x-14} ${y-33} ${x} ${y-44}`; y-=22; } s+=`<path d="${p}" fill="none" stroke="#4b3726" stroke-width="22"/><path d="${p}" fill="none" stroke="${FR.gold}" stroke-width="3" opacity=".8"/>`; });
+  s+=`<path d="M570 300 H1030 L1000 250 H600 Z" fill="#4b3726"/><path d="M600 250 Q700 200 800 210 Q900 200 1000 250" fill="none" stroke="${FR.gold}" stroke-width="5"/>`;
+  s+=`<rect x="690" y="600" width="220" height="50" fill="${FR.cream}" stroke="${FR.gold}" stroke-width="3"/>`;
+  s+=figure(800,602,1.4,{mitre:true, arms:true, id:'celebrant'});
+  s+=`<polygon points="0,900 1600,900 1270,640 330,640" fill="#cbb48a"/>`;
+  for(let k=0;k<3;k++) for(let i=0;i<8;i++){ const f=i/8; const y=880-f*200-k*8; const sc=1.5-f*1.0; const xl=90+f*330+k*95*(1-f*.6), xr=1600-xl; s+=figure(xl,y,sc,{mitre:true}); s+=figure(xr,y,sc,{mitre:true}); }
+  return s;
+};
+
+/* Portal der Sixtina: Extra omnes, Türen schließen */
+SCN.doors = () => {
+  let s=`<rect width="1600" height="900" fill="#e4d4b0"/>`;
+  s+=`<rect x="0" y="0" width="1600" height="120" fill="${FR.lapisD}"/><rect x="0" y="120" width="1600" height="18" fill="${FR.gold}"/>`;
+  s+=`<rect x="470" y="180" width="660" height="660" fill="${FR.stone}" stroke="${FR.stoneD}" stroke-width="10"/>`;
+  s+=`<rect x="510" y="220" width="580" height="620" fill="#2a2018"/>`;
+  s+=`<g id="candle-glow"><ellipse cx="800" cy="560" rx="260" ry="240" fill="#f5d48a" opacity=".22"/></g>`;
+  s+=`<g id="leafL" class="leaf" style="transform-origin:510px 530px"><rect x="510" y="220" width="290" height="620" fill="#6b4a2c"/>${[0,1,2].map(i=>`<rect x="535" y="${250+i*195}" width="240" height="170" fill="none" stroke="#4b3220" stroke-width="8"/>`).join('')}<circle cx="780" cy="540" r="9" fill="${FR.gold}"/></g>`;
+  s+=`<g id="leafR" class="leaf" style="transform-origin:1090px 530px"><rect x="800" y="220" width="290" height="620" fill="#6b4a2c"/>${[0,1,2].map(i=>`<rect x="825" y="${250+i*195}" width="240" height="170" fill="none" stroke="#4b3220" stroke-width="8"/>`).join('')}<circle cx="820" cy="540" r="9" fill="${FR.gold}"/></g>`;
+  s+=`<path d="M470 180 Q800 90 1130 180" fill="none" stroke="${FR.stoneD}" stroke-width="14"/>`;
+  [[330,1],[1270,1]].forEach(([x])=>{ s+=`<g transform="translate(${x} 770) scale(1.9)"><path d="M-20 0 L-16 -44 H16 L20 0 Z" fill="#2b4f8f"/><path d="M-16 -44 H-4 V0 H-12 Z M4 -44 H16 V0 H8 Z" fill="#e0a826"/><path d="M-16 -44 H16 L14 -30 H-14 Z" fill="${FR.red}" opacity=".7"/><circle cx="0" cy="-56" r="11" fill="${FR.flesh}"/><path d="M-13 -60 Q0 -80 13 -60 Z" fill="#2a2a2a"/><path d="M24 0 V-120" stroke="#5a5a5a" stroke-width="3"/><path d="M18 -120 L24 -136 L30 -120 Z" fill="#9a9a9a"/></g>`; });
+  s+=`<g id="mc-fig">`+figure(800,790,1.7,{white:false})+`</g>`;
+  return s;
+};
+
+/* Dach der Sixtina mit Kamin und Petersplatz */
+SCN.smoke = (night) => {
+  let s=`<rect width="1600" height="900" fill="url(#${night?'nightsky':'dusk'})"/>`;
+  const dop = night?0.62:1;
+  s+=`<g opacity="${dop}"><rect x="150" y="390" width="440" height="200" fill="#bfae8a"/><rect x="200" y="300" width="340" height="92" fill="#cbbb97"/>${Array.from({length:9},(_,i)=>`<rect x="${214+i*37}" y="306" width="8" height="84" fill="#b3a27f"/>`).join('')}${Array.from({length:8},(_,i)=>`<path d="M${228+i*37} 380 V336 Q${236+i*37} 326 ${244+i*37} 336 V380 Z" fill="#8f805f"/>`).join('')}<path d="M210 302 C222 182 296 124 370 118 C444 124 518 182 530 302 Z" fill="#c4b38f"/>${[240,272,305,338,402,435,468,500].map(x=>`<path d="M${x} 302 Q${x+(370-x)*0.18} 170 370 120" fill="none" stroke="#a69572" stroke-width="3"/>`).join('')}<rect x="354" y="78" width="32" height="44" fill="#cbbb97"/><path d="M350 80 Q370 52 390 80 Z" fill="#b3a27f"/><path d="M370 52 V36 M363 42 H377" stroke="#8f805f" stroke-width="3"/></g>`;
+  if(night){ const r=mulberry(3); for(let i=0;i<40;i++) s+=`<circle cx="${(r()*1600).toFixed(0)}" cy="${(r()*300).toFixed(0)}" r="${(0.6+r()*1.4).toFixed(1)}" fill="#f4ecd8" opacity="${(0.3+r()*0.5).toFixed(2)}"/>`; }
+  s+=`<polygon points="760,520 1500,520 1440,440 820,440" fill="#a4553b"/><rect x="760" y="520" width="740" height="140" fill="#cdb894"/>`;
+  for(let i=0;i<8;i++) s+=`<rect x="${800+i*86}" y="560" width="22" height="58" fill="#7a6a54" rx="11"/>`;
+  s+=`<rect x="1206" y="330" width="9" height="115" fill="#5c5650"/><rect x="1200" y="324" width="21" height="12" fill="#4a4540"/>`;
+  s+=`<g id="smokeLayer" filter="url(#soft)"></g>`;
+  s+=`<rect x="0" y="660" width="1600" height="240" fill="#2f2a26"/>` + crowdDots(650,900,900,5,true);
+  return s;
+};
+
+/* Raum der Tränen */
+SCN.tears = () => {
+  let s=`<rect width="1600" height="900" fill="#e9dcc0"/><path d="M0 0 H1600 V180 Q800 40 0 180 Z" fill="${FR.ochre}"/><path d="M200 180 Q800 60 1400 180" fill="none" stroke="${FR.gold}" stroke-width="6"/>`;
+  s+=`<rect x="0" y="720" width="1600" height="180" fill="#b79b70"/><path d="M380 300 H1220" stroke="#6b4a2c" stroke-width="10"/>`;
+  [[560,1.0,'S'],[800,1.12,'M'],[1040,1.24,'L']].forEach(([x,k,l])=>{ s+=`<g transform="translate(${x} 300) scale(${k})"><path d="M0 0 V18" stroke="#6b4a2c" stroke-width="4"/><path d="M-40 30 Q0 14 40 30 L60 330 H-60 Z" fill="#fbf8f0" stroke="#d8ccb2" stroke-width="2"/><path d="M0 34 V330" stroke="#e4d9c2" stroke-width="2"/><text x="0" y="370" text-anchor="middle" font-family="Alegreya Sans SC, Georgia" font-size="22" fill="#7a5a3c">${l}</text></g>`; });
+  s+=`<g transform="translate(1340 700)"><rect x="-70" y="-160" width="140" height="160" fill="${FR.red}"/><rect x="-80" y="-180" width="160" height="30" fill="${FR.redD}"/><rect x="-60" y="0" width="12" height="60" fill="#6b4a2c"/><rect x="48" y="0" width="12" height="60" fill="#6b4a2c"/></g>`;
+  s+=`<g transform="translate(250 760)"><rect x="-60" y="-40" width="120" height="40" fill="${FR.red}"/><rect x="-70" y="0" width="140" height="18" fill="#6b4a2c"/></g>`;
+  return s;
+};
+
+/* Papstwappen Franziskus II. */
+SCN.arms = (x,y,k) => `<g transform="translate(${x} ${y}) scale(${k})">
+<g transform="rotate(-38)"><rect x="-6" y="-150" width="12" height="230" fill="${FR.gold}"/><circle cx="0" cy="88" r="22" fill="none" stroke="${FR.gold}" stroke-width="10"/><rect x="-6" y="-150" width="34" height="12" fill="${FR.gold}"/><rect x="-6" y="-126" width="26" height="10" fill="${FR.gold}"/></g>
+<g transform="rotate(38)"><rect x="-6" y="-150" width="12" height="230" fill="#d9d9d4"/><circle cx="0" cy="88" r="22" fill="none" stroke="#d9d9d4" stroke-width="10"/><rect x="-28" y="-150" width="34" height="12" fill="#d9d9d4"/><rect x="-20" y="-126" width="26" height="10" fill="#d9d9d4"/></g>
+<path d="M-28 118 Q0 140 28 118" stroke="${FR.red}" stroke-width="8" fill="none"/>
+<path d="M-62 -170 L-56 -232 Q0 -268 56 -232 L62 -170 Z" fill="#f4eee0" stroke="${FR.gold}" stroke-width="3"/><path d="M-60 -200 H60 M-58 -180 H58 M0 -262 V-170" stroke="${FR.gold}" stroke-width="5"/><path d="M-30 -170 L-40 -130 M30 -170 L40 -130" stroke="${FR.red}" stroke-width="6"/>
+<path d="M-80 -150 H80 V-10 Q80 70 0 110 Q-80 70 -80 -10 Z" fill="#f2efe6"/>
+<path d="M-66 -136 H66 V-12 Q66 56 0 92 Q-66 56 -66 -12 Z" fill="${FR.lapis}"/>
+<path d="M-66 -136 H0 V92 Q-66 56 -66 -12 Z" fill="${FR.goldL}"/>
+<rect x="-66" y="-96" width="66" height="22" fill="${FR.red}"/><rect x="-66" y="-36" width="66" height="22" fill="${FR.red}"/>
+<path d="M14 -96 H54 V-82 H40 V20 H28 V-82 H14 Z" fill="${FR.goldL}"/>
+</g>`;
+
+/* Benediktionsloggia des Petersdoms */
+SCN.loggia = () => {
+  let s=`<rect width="1600" height="900" fill="url(#nightsky)"/><g transform="translate(120 4) scale(0.85)">`;
+  s+=`<rect x="80" y="70" width="1440" height="600" fill="#cdbd9a"/>`;
+  s+=`<rect x="80" y="70" width="1440" height="58" fill="#bfae89"/><text x="800" y="110" text-anchor="middle" font-family="IM Fell Great Primer SC, Georgia, serif" font-size="30" letter-spacing="10" fill="#7c6a4c">IN HONOREM PRINCIPIS APOST</text>`;
+  [120,300,480,1080,1260,1440].forEach(x=>{ s+=`<rect x="${x}" y="128" width="62" height="542" fill="#dacbaa"/><rect x="${x-10}" y="128" width="82" height="26" fill="#c9b892"/>`; for(let i=0;i<5;i++) s+=`<path d="M${x+10+i*10} 160 V660" stroke="#c4b38e" stroke-width="2"/>`; });
+  [190,370,1150,1330].forEach(x=>{ s+=`<path d="M${x} 560 V300 Q${x+50} 240 ${x+100} 300 V560 Z" fill="#3a3326" opacity=".65"/>`; });
+  s+=`<rect x="560" y="128" width="480" height="542" fill="#d4c4a0"/>`;
+  s+=`<path id="loggiaWin" d="M620 600 V300 Q800 160 980 300 V600 Z" fill="#2a2016"/>`;
+  s+=`<g id="loggiaLight" opacity="0"><path d="M620 600 V300 Q800 160 980 300 V600 Z" fill="#f2c977"/><ellipse cx="800" cy="440" rx="180" ry="160" fill="url(#glow)"/></g>`;
+  s+=`<g id="curtain"><path d="M620 600 V300 Q800 160 980 300 V600 Z" fill="${FR.red}"/><path d="M800 196 V600" stroke="${FR.redD}" stroke-width="5"/>${[0,1,2,3,4,5].map(i=>`<path d="M${650+i*55} 260 V600" stroke="${FR.redD}" stroke-width="2" opacity=".6"/>`).join('')}</g>`;
+  s+=`<g id="protodeacon" opacity="0">${figure(800,600,1.9,{paper:true})}</g>`;
+  s+=`<g id="popeFig" opacity="0">${figure(800,600,2.1,{white:true, arms:false})}${figure(700,600,1.6)}${figure(900,600,1.6)}</g>`;
+  s+=`<rect x="580" y="590" width="440" height="34" fill="#cbb994"/>${Array.from({length:14},(_,i)=>`<rect x="${596+i*30}" y="594" width="14" height="26" rx="6" fill="#b9a67f"/>`).join('')}`;
+  s+=`<g id="tapestry"><rect x="660" y="624" width="280" height="150" fill="${FR.red}"/><path d="M660 774 L680 794 L700 774 L720 794 L740 774 L760 794 L780 774 L800 794 L820 774 L840 794 L860 774 L880 794 L900 774 L920 794 L940 774" fill="${FR.red}"/><rect x="660" y="624" width="280" height="14" fill="${FR.gold}"/><g id="tapArms" opacity="0">${SCN.arms(800,722,0.42)}</g><g id="tapPlain"><circle cx="800" cy="700" r="34" fill="none" stroke="${FR.gold}" stroke-width="4"/></g></g>`;
+  s+=`</g><polygon points="200,900 420,600 470,600 380,900" fill="#fff3c9" opacity=".08"/><polygon points="1400,900 1180,600 1130,600 1220,900" fill="#fff3c9" opacity=".08"/>`;
+  s+=`<rect x="0" y="640" width="1600" height="260" fill="#29241f"/>` + crowdDots(650,900,1100,9,true);
+  return s;
+};
+
+/* Szenenrahmen */
+SCN.build = (inner) => `<svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">${SCN.defs()}${inner}${SCN.grain()}</svg>`;
+
+/* Rauchpartikel */
+const SMOKE = { parts:[], color:'#222', on:false, el:null, raf:0 };
+SMOKE.start = (color, el) => { SMOKE.color=color; SMOKE.el=el; SMOKE.parts=[]; SMOKE.on=true; cancelAnimationFrame(SMOKE.raf); let last=performance.now();
+  const tick=(t)=>{ if(!SMOKE.on) return; const dt=Math.min(0.05,(t-last)/1000); last=t;
+    if(SMOKE.parts.length<90 && Math.random()<0.75){ SMOKE.parts.push({x:1210+Math.random()*6, y:322, r:8+Math.random()*6, vx:-10-Math.random()*16, vy:-46-Math.random()*20, a:0.85}); }
+    SMOKE.parts.forEach(p=>{ p.x+=p.vx*dt; p.y+=p.vy*dt; p.r+=dt*13; p.vx-=dt*3; p.a-=dt*0.085; });
+    SMOKE.parts=SMOKE.parts.filter(p=>p.a>0);
+    SMOKE.el.innerHTML = SMOKE.parts.map(p=>`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${p.r.toFixed(1)}" fill="${SMOKE.color}" opacity="${p.a.toFixed(2)}"/>`).join('');
+    SMOKE.raf=requestAnimationFrame(tick); };
+  SMOKE.raf=requestAnimationFrame(tick); };
+SMOKE.stop = () => { SMOKE.on=false; cancelAnimationFrame(SMOKE.raf); };
+/* ============ SPIELABLAUF ============ */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const S = {
+  playerId: BY_KEY.dean.id, bergId: BY_KEY.berg.id, present: [], ballotNo:0, results:[], authority:60,
+  decisions:[], invalid:[], withdrawn:{}, talkPeriod:{}, talkFail:{}, period:0, homily:null, bonus:{},
+  regionBonus:{}, playerVote:null, phoneIgnored:false, pacts:[], elected:false, day:1, dateStr:'', clock:'', busy:false,
+  awaitAgent:null, deanName:'Raffaele Montecalvo', bergAsked:0, sessionKey:'', lots:null, quick:false
+};
+const DAYS = ['Montag, 18. März 2069','Dienstag, 19. März 2069','Mittwoch, 20. März 2069','Donnerstag, 21. März 2069','Freitag, 22. März 2069','Samstag, 23. März 2069'];
+const nameOf = id => COLLEGE[id].name;
+const kard = id => 'Kardinal '+COLLEGE[id].name;
+const need = () => Math.ceil(S.present.length*2/3);
+
+/* ---------- Statusleiste und Chronik ---------- */
+function setStatus(o){
+  if(o.day!=null) S.day=o.day;
+  if(o.clock) S.clock=o.clock;
+  $('#stDate').textContent = (o.date || DAYS[S.day-1] || '') + (S.clock? ' · '+S.clock+' Uhr' : '');
+  if(o.phase) $('#stPhase').textContent=o.phase;
+  if(o.ballot!==undefined) $('#stBallot').textContent=o.ballot;
+}
+function log(t, kind=''){ const li=document.createElement('li'); if(kind) li.className='k-'+kind; li.innerHTML=`<time>${S.clock||''}</time>${t}`; $('#log').prepend(li); }
+function subs(lat, de){ const l=$('#subs .lat'), d=$('#subs .de span'); l.hidden=!lat; l.textContent=lat||''; d.hidden=!de; d.textContent=de||''; }
+function meters(){ $('#mAuth').textContent=Math.round(S.authority); $('#mPresent').textContent=S.present.length||'–'; $('#mNeed').textContent=S.present.length? need() : '–'; }
+function auth(d){ S.authority=Math.max(0,Math.min(100,S.authority+d)); meters(); }
+function idle(t){ const tl=$('#taskList'); if(!tl.children.length || tl.querySelector('.idle')) tl.innerHTML=`<p class="idle">${t}</p>`; }
+
+/* ---------- Tempo ---------- */
+SIM.baseFast=1;
+function segmentReset(){ SIM.fast=SIM.baseFast; $('#btnSkip').setAttribute('aria-pressed','false'); }
+
+/* ---------- Aufgaben ---------- */
+let taskSeq=0;
+function task(spec){
+  segmentReset();
+  return new Promise(res=>{
+    const tl=$('#taskList'); const idleEl=tl.querySelector('.idle'); if(idleEl) idleEl.remove();
+    const card=document.createElement('div'); card.className='task';
+    card.innerHTML=`<div class="t-head"><span class="t-title">${spec.title}</span>${spec.ref?`<span class="ref">${spec.ref}</span>`:''}</div>${spec.text?`<p>${spec.text}</p>`:''}<button class="t-btn" type="button">${spec.button||'Erledigen'}</button>`;
+    tl.appendChild(card);
+    let zone=null;
+    const done=()=>{ if(card.dataset.done) return; card.dataset.done=1; if(zone) SIM.zones=SIM.zones.filter(z=>z!==zone); if(S.awaitAgent && S.awaitAgent.cb===done) S.awaitAgent=null; card.classList.add('done'); setTimeout(()=>card.remove(),650); AUDIO.click(); res(); };
+    card.querySelector('.t-btn').onclick=done;
+    if(spec.zone){ zone={...spec.zone, cb:done}; SIM.zones.push(zone); }
+    if(spec.agent!=null){ S.awaitAgent={cid:spec.agent, cb:done}; }
+  });
+}
+
+/* ---------- Modale Dialoge ---------- */
+function openModal(html, wide){ const m=$('#modal'), d=m.querySelector('.dialog'); d.className='dialog'+(wide?' wide':''); d.innerHTML=html; m.hidden=false; SIM.paused++; $('#btnTalk').disabled=true; return d; }
+function closeModal(){ $('#modal').hidden=true; SIM.paused=Math.max(0,SIM.paused-1); $('#btnTalk').disabled=false; }
+function modalChoice(spec){
+  return new Promise(res=>{
+    const d=openModal(`<div class="kicker">${spec.kicker||'Entscheidung'}</div><h3>${spec.title}</h3><div class="body">${spec.body||''}${spec.ref?`<span class="ref">${spec.ref}</span>`:''}</div><div class="opts">${spec.options.map((o,i)=>`<button class="opt" data-i="${i}" type="button"><b>${o.label}</b>${o.sub?`<span>${o.sub}</span>`:''}</button>`).join('')}</div>`);
+    d.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{ closeModal(); AUDIO.click(); res(+b.dataset.i); });
+    setTimeout(()=>{ const f=d.querySelector('.opt'); if(f) f.focus(); },30);
+  });
+}
+async function decide(spec){
+  segmentReset();
+  let i = await modalChoice(spec); let opt=spec.options[i]; let revised=false;
+  if(!opt.ok && spec.objection){
+    const j = await modalChoice({kicker:'Einspruch', title:spec.objection.who||kard(BY_KEY.canonist.id), body:`<p>${spec.objection.text}</p>`, ref:spec.ref, options:[{label:'Entscheidung revidieren', sub:'Der Einwand ist berechtigt.'},{label:'Bei meiner Entscheidung bleiben', sub:'Sie tragen die Verantwortung.'}]});
+    if(j===0){ opt=spec.options.find(o=>o.ok); revised=true; auth(-3); log(`Sie revidieren Ihre Entscheidung: ${opt.label}.`,'dec'); }
+    else log(`Sie bleiben trotz Einspruch bei: ${opt.label}.`,'bad');
+  }
+  S.decisions.push({key:spec.key, title:spec.short||spec.title, label:opt.label, ok:!!opt.ok, ref:spec.ref, revised, note:opt.note||''});
+  if(!revised) log(`Entscheidung: ${opt.label}`, opt.ok?'dec':'bad');
+  if(opt.effect) opt.effect();
+  return opt;
+}
+
+/* ---------- Szenen ---------- */
+function showScene(inner, steps, opts={}){
+  return new Promise(async res=>{
+    const sc=$('#scene'); sc.querySelector('.art').innerHTML=SCN.build(inner); sc.hidden=false; SIM.paused++; $('#btnTalk').disabled=true;
+    const q=sel=>sc.querySelector(sel); const svg=q('.art svg'); if(window.innerWidth<720) svg.setAttribute('preserveAspectRatio','xMidYMid meet');
+    let result=null;
+    for(const st of steps){
+      q('.kick').textContent=st.kick||opts.kick||''; q('.ttl').textContent=st.title||''; q('.txt').innerHTML=st.text||'';
+      q('.lat').textContent=st.lat||''; q('.de').textContent=st.de||''; q('.choices').innerHTML='';
+      const nb=$('#scNext'); nb.hidden=false; nb.textContent=st.next||'Weiter';
+      if(st.on) st.on(svg, sc);
+      let chant=null;
+      const waits=[];
+      if(st.chant){ chant=st.chant((lat,de)=>{ q('.lat').textContent=lat||''; q('.de').textContent=de||''; }); waits.push(chant.promise); }
+      if(st.choices){ nb.hidden=true; const r=await new Promise(r2=>{ q('.choices').innerHTML=st.choices.map((c,i)=>`<button class="opt" data-i="${i}" type="button"><b>${c.label}</b>${c.sub?`<span>${c.sub}</span>`:''}</button>`).join(''); q('.choices').querySelectorAll('.opt').forEach(b=>b.onclick=()=>{ AUDIO.click(); r2(+b.dataset.i); }); }); result=r; if(st.onChoice) await st.onChoice(r, svg, q); continue; }
+      waits.push(new Promise(r2=>{ nb.onclick=()=>{ AUDIO.click(); r2(); }; }));
+      if(st.auto) waits.push(realSleep(st.auto));
+      await Promise.race(waits);
+      if(chant) chant.stop();
+      if(st.after) st.after(svg);
+    }
+    SMOKE.stop(); sc.hidden=true; SIM.paused=Math.max(0,SIM.paused-1); $('#btnTalk').disabled=false; res(result);
+  });
+}
+
+/* ---------- Akteure anlegen ---------- */
+const AG = {}; // cid -> Agent
+let extraAgents=[];
+function initAgents(){
+  SIM.agents=[];
+  COLLEGE.forEach((c,i)=>{
+    const a=new Agent({id:'c'+i, cid:i, kind:'card', isPlayer:i===S.playerId, pap:!!c.pap, speed:0.9+rnd()*0.25, seat:GEO.seats[i]});
+    a.x=a.seat.x; a.y=a.seat.y; a.visible=false; AG[i]=a; SIM.agents.push(a);
+  });
+}
+function mkExtra(kind, x, y, label){ const a=new Agent({id:kind+extraAgents.length, kind, x, y, speed:1.25, label}); extraAgents.push(a); SIM.agents.push(a); return a; }
+function removeExtra(a){ SIM.agents=SIM.agents.filter(b=>b!==a); extraAgents=extraAgents.filter(b=>b!==a); }
+
+/* ---------- Eingaben im Grundriss ---------- */
+function setupPlanInput(){
+  const cv=$('#plan'), tip=$('#tip');
+  const pos=e=>{ const r=cv.getBoundingClientRect(); return [e.clientX-r.left, e.clientY-r.top]; };
+  cv.addEventListener('pointermove', e=>{
+    const [x,y]=pos(e); const a=PLAN.agentAt(x,y); const z=PLAN.zoneAt(x,y);
+    SIM.hover=a; cv.style.cursor = (a||z)? 'pointer':'default';
+    if(a){ const c=COLLEGE[a.cid]; tip.hidden=false; tip.innerHTML=`<b>${a.white?'Papst Franziskus II.':'Kardinal '+esc(c.name)}</b><br><span class="o">${esc(c.office)}<br>${esc(c.country)} · ${c.age} Jahre${c.pap&&lastVotes(a.cid)!=null?` · zuletzt ${lastVotes(a.cid)} Stimmen`:''}</span>`;
+      const r=cv.getBoundingClientRect(); let tx=x+14, ty=y+12; if(tx+260>r.width) tx=x-270; if(ty+90>r.height) ty=y-90; tip.style.left=Math.max(4,tx)+'px'; tip.style.top=Math.max(4,ty)+'px'; }
+    else tip.hidden=true;
+  });
+  cv.addEventListener('pointerleave', ()=>{ tip.hidden=true; SIM.hover=null; });
+  cv.addEventListener('click', e=>{
+    const [x,y]=pos(e); const z=PLAN.zoneAt(x,y);
+    if(z){ z.cb(); return; }
+    const a=PLAN.agentAt(x,y);
+    if(a){ if(S.awaitAgent && S.awaitAgent.cid===a.cid){ S.awaitAgent.cb(); return; } SIM.selected=a; showInfo(a.cid); }
+  });
+}
+function lastVotes(cid){ const r=S.results[S.results.length-1]; return r? (r.tally.get(cid)||0) : null; }
+function showInfo(cid){
+  const c=COLLEGE[cid]; const box=$('#info'); const lv=lastVotes(cid);
+  let h=`<div class="card-c"><div class="nm">${cid===S.playerId?'Sie – ':''}Kardinal ${esc(c.name)}</div><div class="meta">${esc(c.office)} · ${esc(c.country)} · ${c.age} Jahre · ${ORDO_NAMES[c.ordo]}</div>`;
+  if(c.pap){ h+=`<p>${c.pap.profile}</p>`; if(lv!=null) h+=`<p class="meta">Zuletzt ${lv} Stimmen${S.withdrawn[cid]>2?' · hat seine Unterstützer gebeten, andere zu wählen':''}</p>`; h+=`<button class="t-btn alt" type="button" id="infoTalk">Hintergrundgespräch führen</button>`; }
+  h+=`</div>`; box.innerHTML=h;
+  const b=$('#infoTalk'); if(b) b.onclick=()=>openTalk(cid);
+}
+
+/* ---------- Titel, Prolog ---------- */
+function titleScreen(){
+  $('#title .art').innerHTML = SCN.build(SCN.chapel()); if(window.innerWidth<720) $('#title .art svg').setAttribute('preserveAspectRatio','xMidYMin meet');
+  return new Promise(res=>{
+    const go=(quick)=>{ const n=$('#deanName').value.trim(); if(n) S.deanName=n.replace(/^Kardinal\s+/i,''); COLLEGE[S.playerId].name=S.deanName; COLLEGE[S.playerId].short=shortName(S.deanName); AUDIO.init(); AUDIO.setMuted(false); $('#btnSound').textContent='Ton aus'; $('#title').hidden=true; S.quick=quick; res(); };
+    $('#btnStart').onclick=()=>go(false); $('#btnQuick').onclick=()=>go(true);
+  });
+}
+async function prolog(){
+  AUDIO.organ(true,0.5); AUDIO.setSpace('chapel');
+  await showScene(SCN.chapel(), [
+    {kick:'Sede vacante', title:'Freitag, 1. März 2069, 20 Uhr', text:'Papst Nikolaus VI., früher Erzbischof von München und Freising, hat auf das Petrusamt verzichtet. Er ist seither von allen kirchlichen Ämtern ausgeschlossen. Der Stuhl Petri ist leer.'},
+    {kick:'Sede vacante', title:`Kardinal ${S.deanName}`, text:'Sie sind Dekan des Kardinalskollegiums. Sie rufen die Kardinäle nach Rom, leiten die Generalkongregationen und führen im Konklave den Vorsitz. Sie sind selbst Wähler.'},
+    {kick:'Sede vacante', title:'Carl Berg, Bischof von Münster', text:'Geboren 2015 in Oldenburg, 54 Jahre alt, ein alter Freund des zurückgetretenen Papstes. Unter den 120 Wählern nennt ihn kaum jemand laut einen Favoriten.'},
+    {kick:'Ihre Aufgabe', title:'Eine gültige Wahl', text:'Halten Sie sich an die Regeln von <i>Universi Dominici Gregis</i>. Jede Abweichung kann die Wahl nichtig machen. Wen Sie selbst wählen und mit wem Sie im Hintergrund sprechen, entscheiden Sie allein.', next:'Zur Generalkongregation'},
+  ]);
+}
+
+/* ---------- Generalkongregation ---------- */
+async function generalCongregation(){
+  setStatus({date:'Samstag, 2. März 2069', clock:'9:30', phase:'Generalkongregation · Neue Synodenaula', ballot:''});
+  AUDIO.organ(false); AUDIO.murmur(0.5); AUDIO.setSpace('hall');
+  log('Erste Generalkongregation. Die Kardinäle leisten den Eid auf die Konstitution.');
+  await decide({key:'date', title:'Wann beginnt das Konklave?', short:'Beginn des Konklaves', kicker:'Generalkongregation',
+    body:'<p>Die Sedisvakanz begann am Freitag, 1. März, um 20 Uhr. Zwei Kardinäle sind noch auf der Anreise, darunter der Erzbischof von Port Moresby, dessen Flug wegen eines Zyklons gestrichen wurde.</p>', ref:'UDG 37 · Normas nonnullas 2013',
+    options:[
+      {label:'Montag, 18. März', sub:'17 Tage nach Beginn der Sedisvakanz', ok:true},
+      {label:'Sofort, schon am Montag, 4. März', sub:'Die Kirche soll nicht lange ohne Hirten sein', ok:false, effect:()=>S.invalid.push('Das Konklave begann vor Ablauf von 15 Tagen, obwohl nicht alle Wähler anwesend waren (UDG 37).')},
+      {label:'Dienstag, 26. März', sub:'Mehr Zeit für Gespräche', ok:false, effect:()=>{ auth(-8); }},
+    ],
+    objection:{text:'Eminenz, die Wähler müssen 15 Tage auf die Abwesenden warten. Früher darf das Kollegium nur beginnen, wenn alle anwesend sind – und später als nach 20 Tagen nicht. Der 18. März liegt im zulässigen Rahmen.'}});
+  await decide({key:'over80', title:'Darf Kardinal Esquivel wählen?', short:'Wahlrecht Kardinal Esquivel', kicker:'Generalkongregation',
+    body:`<p>${kard(BY_KEY.over80.id)}, ${BY_KEY.over80.office}, ist am 4. März 80 Jahre alt geworden – drei Tage nach Beginn der Sedisvakanz. Einige Kardinäle meinen, er sei nun zu alt.</p>`, ref:'UDG 33',
+    options:[
+      {label:'Ja, er ist Wähler', sub:'Maßgeblich ist das Alter bei Beginn der Sedisvakanz', ok:true},
+      {label:'Nein, er ist über 80', sub:'Er nimmt am Konklave nicht teil', ok:false, effect:()=>{ S.excluded=BY_KEY.over80.id; S.invalid.push('Kardinal Esquivel wurde zu Unrecht vom Wahlrecht ausgeschlossen (UDG 33, 35).'); }},
+    ],
+    objection:{text:'Eminenz, wählen dürfen alle, die vor dem Tag des Beginns der Sedisvakanz das 80. Lebensjahr noch nicht vollendet hatten. Kardinal Esquivel war am 1. März 79. Ihn auszuschließen, verstößt gegen Nr. 33 und 35.'}});
+  AUDIO.murmur(0);
+}
+
+/* ---------- Messe im Petersdom ---------- */
+async function missa(){
+  setStatus({day:1, clock:'10:00', phase:'Missa pro eligendo Romano Pontifice · Petersdom'});
+  AUDIO.organ(true,0.6); AUDIO.setSpace('basilica');
+  await showScene(SCN.basilica(), [
+    {kick:'Petersdom · 10 Uhr', title:'Missa pro eligendo Romano Pontifice', text:'Als Dekan feiern Sie die Messe für die Wahl des Papstes. Alle Kardinäle konzelebrieren, auch die über 80-Jährigen. Gläubige füllen das Kirchenschiff.'},
+    {kick:'Ihre Predigt', title:'Worauf legen Sie den Akzent?', text:'Die Predigt des Dekans wird in den Tagen danach gedeutet. Ein Wort kann die ersten Wahlgänge färben.', choices:[
+      {label:'Einheit', sub:'Eine Kirche, die zusammenhält'},{label:'An die Ränder', sub:'Zu den Armen und Vergessenen gehen'},{label:'Treue zur Überlieferung', sub:'Lehre und Liturgie bewahren'},{label:'Mut zur Reform', sub:'Synodal, offen, beteiligend'}],
+      onChoice:(i)=>{ S.homily=['unitas','margines','traditio','reformatio'][i]; log(`Ihre Predigt: ${['Einheit','An die Ränder','Treue zur Überlieferung','Mut zur Reform'][i]}.`); }},
+    {kick:'Petersdom', title:'Ite, missa est.', text:'Die Kardinäle kehren in die Domus Sanctae Marthae zurück. Am Nachmittag beginnt das Konklave.', lat:'Ite, missa est.', de:'Geht hin in Frieden.'},
+  ]);
+  AUDIO.organ(false);
+}
+
+/* ---------- Prozession, Veni Creator, Eid ---------- */
+function setPresentInitial(){
+  S.present = COLLEGE.map(c=>c.id).filter(id=>id!==BY_KEY.late.id && id!==S.excluded);
+  meters();
+}
+async function procession(){
+  setStatus({clock:'16:30', phase:'Prozession aus der Cappella Paolina'});
+  AUDIO.setSpace('chapel'); PLAN.setMap('chapel'); SIM.doorClosed=false;
+  setPresentInitial();
+  /* Chor und Zeremonienmeister */
+  const choir=[]; for(let i=0;i<10;i++){ const a=mkExtra('choir', 54+i*0.6, 6.7); a.visible=true; choir.push(a); }
+  const mcs=[0,1,2].map(i=>{ const a=mkExtra('mc', 55+i, 6.7); a.visible=true; return a; });
+  S.choir=choir; S.mcs=mcs;
+  await task({title:'Prozession beginnen', text:'Die Kardinäle ziehen, die Allerheiligenlitanei singend, aus der Cappella Paolina durch die Sala Regia in die Sixtinische Kapelle. Die Jüngsten gehen voran, der Dekan zuletzt.', button:'Prozession beginnen', ref:'UDG 50'});
+  log('Die Prozession beginnt. Gesungen wird die Allerheiligenlitanei.');
+  const lit = AUDIO.litany((i,part)=>{ const L=TXT.litany[i]; subs(part? L[1] : L[0], L[2]); });
+  idle('Die Kardinäle ziehen ein. Nutzen Sie „Vorspulen“, wenn es Ihnen zu lange dauert.');
+  choir.forEach((a,i)=>walk(a,[{x:44,y:6.7},{x:41.6,y:6.7},{x:38,y:6.7},{x:33+ (i%5)*1.1, y: i<5? 1.3 : 12.1}]));
+  mcs.forEach((a,i)=>walk(a,[{x:44,y:6.7},{x:41.6,y:6.7},{x:30,y:6.7},{x:3.2+i*0.8,y:3.0}]));
+  await sleep(4);
+  const order = S.present.slice().sort((a,b)=>b-a);
+  const arrivals=[];
+  for(let n=0;n<order.length;n++){
+    const a=AG[order[n]]; a.visible=true; a.x=54+ (n%2)*0.6; a.y=6.2+(n%2)*1.0;
+    arrivals.push(walk(a, PATHS.entryToSeat(a.seat)));
+    await sleep(n%2? 1.1 : 0.15);
+  }
+  await Promise.all(arrivals);
+  lit.stop(); subs('','');
+  log('Alle Wähler haben ihre Plätze eingenommen.');
+}
+async function veni(){
+  setStatus({clock:'17:05', phase:'Veni Creator Spiritus'});
+  await task({title:'Hymnus anstimmen', text:'Vor dem Eid singen die Kardinäle den Hymnus „Veni Creator Spiritus“.', button:'Veni Creator anstimmen', ref:'UDG 52'});
+  const ch = AUDIO.veni(i=>{ if(i<0) subs('Amen.','Amen.'); else subs(TXT.veni[i][0], TXT.veni[i][1]); });
+  const skipT = task({title:'Der Hymnus erklingt', text:'Sie können den Gesang abkürzen.', button:'Hymnus beenden'});
+  await Promise.race([ch.promise, skipT]); ch.stop(); subs('','');
+  document.querySelectorAll('.task').forEach(t=>{ if(!t.dataset.done){ t.querySelector('.t-btn').click(); } });
+}
+async function oath(){
+  setStatus({clock:'17:20', phase:'Eid der Kardinäle'});
+  await task({title:'Eidesformel verlesen', text:'Als Dekan lesen Sie die gemeinsame Eidesformel laut vor.', button:'Formel verlesen', ref:'UDG 53'});
+  subs(TXT.oathCommon[0], TXT.oathCommon[1]); log('Sie verlesen die gemeinsame Eidesformel.');
+  await sleep(5);
+  const me=AG[S.playerId];
+  await task({title:'Zum Evangeliar treten', text:'Jeder Kardinal legt die Hand auf das Evangelienbuch und spricht seinen Eid. Sie beginnen.', button:'Zum Pult gehen', zone:{x:GEO.lectern.x, y:GEO.lectern.y, r:0.8, label:'Evangeliar'}});
+  const q=new Queue(async a=>{
+    await walk(a,[{x:GEO.lectern.x+0.55,y:GEO.lineY}]);
+    a.kneel=1; const o=TXT.oathSingle(COLLEGE[a.cid].name); if(a.isPlayer||a.cid===S.bergId||q.count<4) subs(o[0], o[1]); q.count=(q.count||0)+1;
+    await sleep(a.isPlayer?4:1.1); a.kneel=0;
+  });
+  SIM.queues.push(q);
+  const order=S.present.slice().sort((a,b)=>a-b);
+  const all=[];
+  for(const id of order){
+    const a=AG[id];
+    while(q.list.length>=6) await sleep(0.3);
+    all.push((async()=>{ await walk(a, PATHS.seatToLane(a.seat)); await q.join(a); await walk(a, [{x:GEO.lectern.x+0.6, y:a.seat.side==='top'?GEO.laneTop:GEO.laneBot}, {x:GEO.nearestGap(a.seat.x)+0.01, y:GEO.lane(a.seat.side)}, ...PATHS.laneToSeat(a.seat).slice(1)]); })());
+    await sleep(id===S.playerId?2.5:0.7);
+  }
+  await Promise.all(all); SIM.queues=SIM.queues.filter(x=>x!==q); subs('','');
+  log('Alle Kardinalwähler haben den Eid geleistet.');
+}
+async function extraOmnes(){
+  setStatus({clock:'17:45', phase:'Extra omnes'});
+  await task({title:'Das Zeichen geben', text:`${STAFF.master}, ${STAFF.masterTitle}, wartet auf Ihr Zeichen, alle Nicht-Wähler hinauszuschicken.`, button:'Zeichen geben', ref:'UDG 52'});
+  subs(TXT.extra[0], TXT.extra[1]); log('„Extra omnes!“ – Alle, die nicht zum Konklave gehören, verlassen die Kapelle.');
+  S.choir.forEach((a,i)=>walk(a,[{x:39,y:6.7},{x:41.6,y:6.7},{x:47+i%3,y:4+i}]).then(()=>{ a.visible=false; }));
+  await sleep(6);
+  subs(`${STAFF.preacher} hält die zweite Meditation.`, 'Über die Verantwortung der Wähler und die rechte Absicht.');
+  await sleep(8);
+  subs('','');
+  S.mcs.forEach((a,i)=>walk(a,[{x:30,y:6.7},{x:41.6,y:6.7},{x:46,y:8+i}]).then(()=>{ a.visible=false; }));
+  await sleep(4);
+  await task({title:'Türen schließen lassen', text:'Der Prediger und der Zeremonienmeister haben die Kapelle verlassen. Ab jetzt sind die Wähler allein.', button:'Tür schließen', zone:{x0:40.9,y0:5.8,x1:42.1,y1:7.6,label:'Tür'}});
+  await showScene(SCN.doors(), [
+    {kick:'Cappella Sistina · 17:52 Uhr', title:'Die Türen schließen sich', text:'Draußen beziehen Schweizergardisten Posten. Die Kapelle ist bis zum Ende der Sitzung verschlossen.', on:(svg,sc)=>{ sc.querySelector('.art').classList.add('doors-open'); setTimeout(()=>{ sc.querySelector('.art').classList.remove('doors-open'); setTimeout(()=>AUDIO.door(),2200); },400); }},
+  ]);
+  $('#scene .art').classList.remove('doors-open');
+  SIM.doorClosed=true; SIM.seal=true; AUDIO.door(); log('Die Türen der Sixtinischen Kapelle sind geschlossen.');
+}
+async function phoneEvent(){
+  const p=BY_KEY.phone.id;
+  await decide({key:'phone', title:`Ein Mobiltelefon bei ${kard(p)}`, short:'Mobiltelefon gefunden', kicker:'Vor dem ersten Wahlgang',
+    body:`<p>Bei der technischen Kontrolle der Domus Sanctae Marthae haben Gendarmen in der Reisetasche von Kardinal Kessler ein eingeschaltetes Mobiltelefon gefunden. Er sagt, er habe es vergessen. Mehrere Kardinäle verlangen, ihn vom Konklave auszuschließen.</p>`, ref:'UDG 35 · 55 · 58',
+    options:[
+      {label:'Telefon einziehen, an den Eid erinnern', sub:'Kardinal Kessler bleibt Wähler', ok:true},
+      {label:'Kardinal Kessler ausschließen', sub:'Ein klares Zeichen für die Geheimhaltung', ok:false, effect:()=>{ S.present=S.present.filter(x=>x!==p); AG[p].visible=false; S.invalid.push('Kardinal Kessler wurde vom Konklave ausgeschlossen. Kein Wähler darf aus irgendeinem Grund ausgeschlossen werden (UDG 35).'); meters(); }},
+      {label:'Die Sache auf sich beruhen lassen', sub:'Keine Unruhe am ersten Tag', ok:false, effect:()=>{ S.phoneIgnored=true; auth(-4); }},
+    ],
+    objection:{text:'Eminenz, kein Kardinalwähler darf aus irgendeinem Grund von der Wahl ausgeschlossen werden. Das Telefon gehört eingezogen. Wer das Geheimnis bricht, zieht sich die Exkommunikation zu – aber er bleibt Wähler.'}});
+}
+
+/* ---------- Wahlgang ---------- */
+function homilyBonus(k){ const b={...S.bonus}; if(S.homily && k<=2){ PAP_IDS.forEach(id=>{ if(COLLEGE[id].pap.homily===S.homily) b[id]=(b[id]||0)+0.3; }); } return b; }
+async function playerBallot(k){
+  return new Promise(res=>{
+    const opts = COLLEGE.filter(c=>S.present.includes(c.id)).slice().sort((a,b)=>a.short.localeCompare(b.short,'de'));
+    const def = S.playerVote ?? S.bergId;
+    const d=openModal(`<div class="kicker">${k}. Wahlgang · Ihr Wahlzettel</div><h3>Eligo in Summum Pontificem</h3>
+      <div class="body"><p>Schreiben Sie den Namen in verstellter Schrift, falten Sie den Zettel zweimal.</p>
+      <label class="lbl" for="pv">Ihr Kandidat</label><br><select id="pv" style="width:100%;padding:7px;font:inherit;margin:4px 0 12px;background:#fbf7ec;color:#2f251c;border:1px solid #bba985">${opts.map(c=>`<option value="${c.id}" ${c.id===def?'selected':''}>${esc(c.short)} – ${esc(c.name)}${c.pap?' ·':''}</option>`).join('')}</select>
+      <div class="ballot" style="margin:0 auto"><div class="b-print">Eligo in Summum Pontificem</div><div class="b-line"></div><div class="b-name" id="pvName"></div></div></div>
+      <div class="opts"><button class="opt" id="pvOk" type="button"><b>Zettel falten</b><span>Sie behalten ihn bis zur Stimmabgabe am Altar.</span></button></div>`);
+    const upd=()=>{ const c=COLLEGE[+$('#pv').value]; $('#pvName').textContent = c.pap? c.pap.ballot[0] : c.short; $('#pvName').style.fontFamily=HANDS[1]; };
+    $('#pv').onchange=upd; upd();
+    $('#pvOk').onclick=()=>{ S.playerVote=+$('#pv').value; closeModal(); AUDIO.rustle(); log(`Sie haben Ihren Zettel ausgefüllt.`); res(); };
+  });
+}
+async function distribute(k){
+  SIM.doorClosed=false; SIM.seal=false;
+  const mcs=S.mcs; mcs.forEach((a,i)=>{ a.visible=true; a.alpha=1; teleport(a, 44+i*0.5, 6.7); });
+  const walkSide=async(a, side)=>{
+    const ly = side==='top'? 4.95 : 8.45;
+    await walk(a,[{x:41.6,y:6.7},{x:27,y:ly}]);
+    for(let j=19;j>=0;j--){ await walk(a,[{x:GEO.seatX(j),y:ly}]); S.present.forEach(id=>{ const ag=AG[id]; if(ag.seat.side===side && ag.seat.j===j){ ag.hasBallot=true; } }); AUDIO.paperTick(); }
+    await walk(a,[{x:5.6,y:ly}]);
+  };
+  SIM.ballotsOnTables=true;
+  const tTop = task({title:'Wahlzettel austeilen – Nordseite', text:'Die Zeremonienmeister legen jedem Wähler mindestens zwei Zettel hin.', button:'Nordseite', zone:{x0:6.2,y0:0.5,x1:26.2,y1:4.7,label:'Nordseite'}, ref:'UDG 64'}).then(()=>walkSide(mcs[0],'top'));
+  const tBot = task({title:'Wahlzettel austeilen – Südseite', button:'Südseite', zone:{x0:6.2,y0:8.7,x1:26.2,y1:12.9,label:'Südseite'}}).then(()=>walkSide(mcs[1],'bot'));
+  await Promise.all([tTop,tBot]);
+  log(`${k}. Wahlgang: Die Wahlzettel sind ausgeteilt.`);
+}
+async function drawLots(){
+  const key=S.sessionKey;
+  if(S.lots && S.lots.key===key) return;
+  await task({title:'Lose ziehen lassen', text:'Der jüngste Kardinaldiakon zieht drei Skrutatoren, drei Infirmarii und drei Revisoren. Spielregel: Das erste Skrutator-Los fällt immer auf Sie.', button:'Lose ziehen', ref:'UDG 64'});
+  const j=AG[BY_KEY.junior.id];
+  await walk(j,[...PATHS.seatToLane(j.seat),{x:GEO.altarFront.x+0.6,y:GEO.lineY}]);
+  const pool=shuffle(S.present.filter(id=>id!==S.playerId && id!==S.bergId && id!==BY_KEY.ill.id));
+  S.lots={key, scr:[pool[0],pool[1],S.playerId], inf:[pool[2],pool[3],pool[4]], rev:[pool[5],pool[6],pool[7]]};
+  await sleep(2);
+  const fmt=a=>a.map(id=>COLLEGE[id].short).join(', ');
+  log(`Skrutatoren: ${fmt(S.lots.scr)}. Infirmarii: ${fmt(S.lots.inf)}. Revisoren: ${fmt(S.lots.rev)}.`);
+  $('#info').innerHTML=`<div class="card-c"><div class="nm">Los gezogen</div><p><b>Skrutatoren:</b> ${fmt(S.lots.scr.slice(0,2))} und Sie (dritter Skrutator)<br><b>Infirmarii:</b> ${fmt(S.lots.inf)}<br><b>Revisoren:</b> ${fmt(S.lots.rev)}</p></div>`;
+  walk(j,[{x:GEO.nearestGap(j.seat.x),y:GEO.lane(j.seat.side)},...PATHS.laneToSeat(j.seat).slice(1)]);
+}
+async function closeForVote(){
+  await task({title:'Nicht-Wähler hinausschicken, Tür schließen', text:'Die Zeremonienmeister verlassen die Kapelle. Der jüngste Kardinaldiakon schließt die Tür.', button:'Tür schließen', zone:{x0:40.9,y0:5.8,x1:42.1,y1:7.6,label:'Tür'}, ref:'UDG 64'});
+  S.mcs.forEach((a,i)=>walk(a,[{x:30,y:6.7},{x:41.6,y:6.7},{x:46,y:8+i}]).then(()=>{ a.visible=false; }));
+  const j=AG[BY_KEY.junior.id];
+  await walk(j,[...PATHS.seatToLane(j.seat),{x:30,y:GEO.lane(j.seat.side)},{x:40.3,y:6.7}]);
+  await sleep(2.5); SIM.doorClosed=true; AUDIO.door();
+  await walk(j,[{x:30,y:GEO.lane(j.seat.side)},{x:GEO.nearestGap(j.seat.x),y:GEO.lane(j.seat.side)},...PATHS.laneToSeat(j.seat).slice(1)]);
+}
+async function voting(k, ballots, opts){
+  let infUsed=false;
+  if(opts.ill){ AG[BY_KEY.ill.id].visible=false; log(`${kard(BY_KEY.ill.id)} fehlt in der Kapelle.`); }
+  /* Schreiben */
+  setStatus({phase:`${k}. Wahlgang · Die Wähler schreiben`});
+  S.present.forEach(id=>{ if(id!==S.playerId) AG[id].writing=3+rnd()*6; });
+  await playerBallot(k);
+  const res = MODEL.vote({k, present:S.present, last:S.lastTally||{}, total:S.lastTotal||0, withdrawn:S.withdrawn, bonus:homilyBonus(k), regionBonus:S.regionBonus, playerId:S.playerId, playerVote:S.playerVote});
+  ballots.push(...res.ballots);
+  await sleep(4);
+  /* Infirmarii */
+  let infDone=Promise.resolve();
+  if(opts.ill){
+    await decide({key:'ill', title:`${kard(BY_KEY.ill.id)} ist erkrankt`, short:'Kranker Wähler', kicker:`${k}. Wahlgang`,
+      body:'<p>Der Erzbischof von Santiago de Chile liegt mit Fieber in seinem Zimmer in der Domus Sanctae Marthae. Er möchte wählen.</p>', ref:'UDG 67',
+      options:[
+        {label:'Die drei Infirmarii mit der verschlossenen Urne schicken', sub:'Sie bringen seinen Zettel zurück', ok:true},
+        {label:'Seine Stimme entfällt diesmal', sub:'Der Ablauf bleibt einfach', ok:false, effect:()=>{ S.invalid.push('Einem kranken Wähler wurde die Stimmabgabe verweigert, statt die Infirmarii zu schicken (UDG 67).'); const b=ballots.findIndex(x=>x.voter===BY_KEY.ill.id); if(b>=0) ballots.splice(b,1); S.skipIll=true; }},
+        {label:'Ein Kardinal holt seinen ausgefüllten Zettel', sub:'Das geht schneller', ok:false, effect:()=>auth(-6)},
+      ],
+      objection:{text:'Eminenz, für kranke Wähler sieht die Konstitution genau ein Verfahren vor: Die drei Infirmarii bringen eine verschlossene Urne zu ihm, mit Zetteln. Ihm die Stimme zu nehmen, schließt ihn von der Wahl aus.'}});
+    if(!S.skipIll){
+      infUsed=true;
+      const inf=S.lots.inf.map(id=>AG[id]);
+      infDone=(async()=>{ await Promise.all(inf.map(async(a,i)=>{ a.box=i===0; await walk(a,[...PATHS.seatToLane(a.seat),{x:30,y:GEO.lane(a.seat.side)},{x:41.6,y:6.7},{x:44+i*0.5,y:4}]); a.alpha=0.25; }));
+        SIM.doorClosed=false; await sleep(30); await Promise.all(inf.map(async(a,i)=>{ a.alpha=1; await walk(a,[{x:41.6,y:6.7},{x:30,y:6.7},{x:5.6,y:GEO.lineY+0.8}]); })); SIM.doorClosed=true; log('Die Infirmarii sind mit der Urne aus der Domus Sanctae Marthae zurück.'); return inf; })();
+    }
+    S.skipIll=false;
+  }
+  /* Stimmabgabe */
+  setStatus({phase:`${k}. Wahlgang · Stimmabgabe`});
+  AUDIO.ambientCoughs=true;
+  await task({title:'Zum Altar treten', text:'Als Dekan geben Sie als Erster Ihre Stimme ab. Am Altar sprechen Sie den Eid und legen den Zettel auf die Patene.', button:'Zum Altar gehen', zone:{x:GEO.kneel.x, y:GEO.kneel.y, r:0.9, label:'Altar'}, ref:'UDG 66'});
+  let cnt=0;
+  const q=new Queue(async a=>{
+    await walk(a,[{x:GEO.kneel.x,y:GEO.kneel.y}]); a.kneel=1;
+    if(a.isPlayer || cnt<2) subs(TXT.testor[0], TXT.testor[1]); cnt++;
+    await sleep(a.isPlayer?4.5:0.8); a.kneel=0;
+    await walk(a,[{x:GEO.altarFront.x,y:GEO.altarFront.y}]); a.carry=false; SIM.flash.push({x:GEO.urn.x,y:GEO.urn.y,t:performance.now()/1000}); AUDIO.paperTick();
+    await sleep(0.3); if(a.isPlayer || cnt===3) subs('','');
+    if(a.isPlayer) log('Sie haben Ihre Stimme abgegeben.');
+  });
+  SIM.queues.push(q);
+  const voters=S.present.filter(id=>!(opts.ill && id===BY_KEY.ill.id)).sort((a,b)=>a-b);
+  const all=[];
+  for(const id of voters){
+    const a=AG[id];
+    if(infUsed && S.lots.inf.includes(id)){ continue; }
+    while(q.list.length>=6) await sleep(0.3);
+    all.push((async()=>{ a.hasBallot=false; a.carry=true; await walk(a, PATHS.seatToLane(a.seat)); await q.join(a); await walk(a,[{x:3.4,y:a.seat.side==='top'?GEO.laneTop:GEO.laneBot},{x:GEO.nearestGap(a.seat.x),y:GEO.lane(a.seat.side)},...PATHS.laneToSeat(a.seat).slice(1)]); })());
+    await sleep(id===S.playerId?3:0.9);
+  }
+  await Promise.all(all);
+  if(infUsed){ const inf=await infDone; if(inf && inf.length){ for(const a of inf){ a.carry=true; await q.join(a); a.box=false; await walk(a,[{x:3.4,y:GEO.lane(a.seat.side)},{x:GEO.nearestGap(a.seat.x),y:GEO.lane(a.seat.side)},...PATHS.laneToSeat(a.seat).slice(1)]); } } }
+  SIM.queues=SIM.queues.filter(x=>x!==q);
+  AUDIO.ambientCoughs=false; subs('','');
+  SIM.ballotsOnTables=false;
+}
+
+/* ---------- Auszählung ---------- */
+function strokesSVG(n){
+  const g=Math.ceil(n/5); const w=Math.max(10,g*24); let p='';
+  for(let i=0;i<n;i++){ const grp=Math.floor(i/5), k=i%5, x0=grp*24+3;
+    if(k<4) p+=`<path d="M${x0+k*4.5} 2 L${x0+k*4.5+0.6} 16"/>`; else p+=`<path d="M${x0-2} 13 L${x0+16} 4"/>`; }
+  return `<svg viewBox="0 0 ${w} 18" width="${w}" height="18" fill="none" stroke="#1f2d55" stroke-width="1.6" stroke-linecap="round">${p}</svg>`;
+}
+function ballotText(cid){ const c=COLLEGE[cid]; const v = c.pap? c.pap.ballot : [c.short, 'Card. '+c.short]; return v[Math.floor(rnd()*v.length)]; }
+function ballotHTML(e, extra=''){ return `<div class="ballot ${extra}" style="transform:rotate(${e.rot}deg)"><div class="b-print">${TXT.eligo}</div><div class="b-line"></div><div class="b-name" style="font-family:${HANDS[e.hand]}">${esc(e.text)}</div></div>`; }
+
+async function scrutiny(k, ballots, opts){
+  setStatus({phase:`${k}. Wahlgang · Skrutinium`});
+  const scr=S.lots.scr;
+  const others=scr.filter(id=>id!==S.playerId);
+  [...others, S.playerId].forEach((id,i)=>{ const a=AG[id]; walk(a,[...PATHS.seatToLane(a.seat),{x:7,y:GEO.laneBot},{x:GEO.scrSeats[i].x,y:GEO.scrSeats[i].y}]); a.label= id===S.playerId? 'Sie' : null; });
+  await sleep(6);
+  $('#desk').hidden=true; $('#scrut').hidden=false;
+  $('#scrTitle').textContent=`Skrutinium · ${k}. Wahlgang`; $('#resultBox').innerHTML=''; $('#scrMsg').textContent='';
+  const area=$('#ballotArea'); area.innerHTML=''; $('#tallyRows').innerHTML='';
+  /* 1. Zählen */
+  log(`${COLLEGE[others[0]].short} schüttelt die Urne. Sie zählen die Zettel.`);
+  const N = ballots.length + (opts.mismatch?1:0);
+  SIM.pileCount=N;
+  for(let i=0;i<=N;i++){ $('#scrCount').textContent=`${i} Zettel gezählt`; if(i%6===0) AUDIO.paperTick(); await realSleep(i<N-6? 14 : 70); }
+  if(!opts.mismatch){ $('#scrMsg').textContent=`${N} Zettel bei ${ballots.length} Wählern – die Zahl stimmt.`; await realSleep(1100); }
+  const op = !opts.mismatch? {ok:true} : await decide({key: opts.mismatch?'mismatch':'count'+k, title:`${N} Zettel bei ${ballots.length} Wählern`, short:'Zahl der Zettel', kicker:'Skrutinium',
+    body: opts.mismatch? `<p>Sie zählen die Zettel einzeln in die zweite Urne. Es sind ${N} – einer mehr, als Wähler abgestimmt haben. Vielleicht hat jemand zwei Zettel eingeworfen.</p>` : `<p>Die Zahl der Zettel stimmt mit der Zahl der Wähler überein.</p>`, ref:'UDG 68',
+    options: opts.mismatch? [
+      {label:'Alle Zettel ungeöffnet verbrennen, sofort neu wählen', sub:'So schreibt es die Konstitution vor', ok:true},
+      {label:'Trotzdem auszählen', sub:'Ein Zettel mehr ändert kaum etwas', ok:false, effect:()=>{ S.invalid.push(`Im ${k}. Wahlgang wurde trotz falscher Zettelzahl ausgezählt (UDG 68).`); }},
+    ] : [{label:'Mit der Auszählung beginnen', ok:true}],
+    objection: opts.mismatch? {text:'Eminenz, stimmt die Zahl der Zettel nicht mit der Zahl der Wähler überein, sind alle Zettel zu verbrennen, und es wird sofort ein zweites Mal abgestimmt.'} : null});
+  if(opts.mismatch && op.ok){ return {redo:true}; }
+  /* 2. Vorlesen und Strichliste */
+  let entries = shuffle(ballots.map(b=>({cand:b.cand, text:ballotText(b.cand), hand:Math.floor(rnd()*4), rot:(rnd()*6-3).toFixed(1)})));
+  let dbl=null;
+  if(opts.double){ const i=8+Math.floor(rnd()*10); const a=entries[i]; let j=entries.findIndex((e,x)=>x>i && e.cand!==a.cand); if(j>0){ const b=entries.splice(j,1)[0]; entries[i]={double:true, parts:[a,b]}; dbl=entries[i]; } }
+  const sheet=new Map(); const stack=[]; let errors=0;
+  const rowOrder=[];
+  const ensureRow=cid=>{ if(!rowOrder.includes(cid)){ rowOrder.push(cid); } };
+  const prev=S.results[S.results.length-1];
+  PAP_IDS.slice().sort((a,b)=> prev? (prev.tally.get(b)||0)-(prev.tally.get(a)||0) : 0).forEach(ensureRow);
+  if(prev) [...prev.tally.keys()].forEach(ensureRow);
+  const renderRows=()=>{ $('#tallyRows').innerHTML=rowOrder.map((cid,i)=>`<li data-c="${cid}"><span class="k">${i<9?i+1:''}</span><span class="nm">${esc(COLLEGE[cid].short)}</span><span>${strokesSVG(sheet.get(cid)||0)}</span><span class="cnt">${sheet.get(cid)||0}</span></li>`).join(''); };
+  renderRows();
+  let idx=0; let finished; let lock=false;
+  const done=new Promise(r=>finished=r);
+  const truth=new Map();
+  const show=()=>{
+    lock=false;
+    $('#scrCount').textContent=`Zettel ${Math.min(idx+1,entries.length)} von ${entries.length}`;
+    if(idx>=entries.length){ area.innerHTML=''; finished(); return; }
+    const e=entries[idx];
+    if(e.double){
+      area.innerHTML = ballotHTML(e.parts[0]) + ballotHTML(e.parts[1]) + `<div class="dbl-actions"><button class="t-btn" data-d="0" type="button">Als eine Stimme werten</button><button class="t-btn" data-d="1" type="button">Keine Stimme</button><button class="t-btn alt" data-d="2" type="button">Beide Stimmen werten</button></div>`;
+      $('#scrMsg').textContent='Zwei Zettel, ineinander gefaltet – offenbar von einem einzigen Wähler. Die Namen sind verschieden.';
+      area.querySelectorAll('[data-d]').forEach(b=>b.onclick=async()=>{
+        const d=+b.dataset.d;
+        const op2 = await decide({key:'double', title:'Zwei Zettel, zwei Namen', short:'Doppelt gefaltete Zettel', kicker:'Skrutinium', body:`<p>Sie haben entschieden: <b>${['eine Stimme','keine Stimme','beide Stimmen'][d]}</b>. Die anderen Skrutatoren nicken.</p>`, ref:'UDG 69',
+          options:[{label:'Bestätigen', ok:d===1}], objection:{text:'Eminenz, zwei ineinander gefaltete Zettel mit verschiedenen Namen sind beide ungültig. Mit gleichem Namen zählten sie als eine Stimme.'}});
+        if(!op2.ok){ /* Spieler blieb bei falscher Wertung: Revisoren korrigieren */ errors++; }
+        idx++; $('#scrMsg').textContent=''; show();
+      });
+      return;
+    }
+    area.innerHTML=ballotHTML(e);
+    AUDIO.rustle();
+    if(!rowOrder.includes(e.cand)){ $('#scrMsg').innerHTML=`Dieser Name steht noch nicht auf Ihrer Liste. <button class="btn" type="button" id="addName">„${esc(COLLEGE[e.cand].short)}“ eintragen</button>`; $('#addName').onclick=()=>strike(e.cand); }
+    else $('#scrMsg').textContent='';
+  };
+  const strike=(cid)=>{
+    if(idx>=entries.length || lock) return;
+    const e=entries[idx]; if(e.double) return;
+    ensureRow(cid); sheet.set(cid,(sheet.get(cid)||0)+1); truth.set(e.cand,(truth.get(e.cand)||0)+1);
+    const ok = cid===e.cand; stack.push({cid, truthCid:e.cand, ok, idx});
+    subs(e.text, ok? '' : '');
+    if(!ok){ errors++; const b=area.querySelector('.ballot'); if(b) b.classList.add('err'); $('#scrMsg').textContent=`Der zweite Skrutator stutzt: Auf dem Zettel steht „${e.text}“. Löschen Sie den Strich, wenn Sie sich geirrt haben.`; }
+    renderRows(); const li=$(`#tallyRows li[data-c="${cid}"]`); if(li){ li.classList.add('hit'); setTimeout(()=>li.classList.remove('hit'),300); }
+    if(cid===S.bergId && (sheet.get(cid)||0)===need() && ok){ AUDIO.applause(5,0.5); $('#scrMsg').textContent=`${sheet.get(cid)}. Stimme für Berg – die Zweidrittelmehrheit. Beifall in der Kapelle.`; log('Bei der Verlesung erreicht Kardinal Berg die Zweidrittelmehrheit. Beifall.','res'); }
+    idx++; lock=true;
+    const b=area.querySelector('.ballot'); if(b){ b.classList.add('pierce'); setTimeout(()=>{ b.classList.add('flip'); setTimeout(show, ok?160:420); }, ok?90:700); } else show();
+  };
+  $('#tallyRows').onclick=e=>{ const li=e.target.closest('li'); if(li) strike(+li.dataset.c); };
+  const onKey=e=>{ if($('#scrut').hidden || !$('#modal').hidden) return; if(document.activeElement && document.activeElement.id==='nameSearch') return; const n=parseInt(e.key,10); if(n>=1&&n<=9&&rowOrder[n-1]!=null){ e.preventDefault(); strike(rowOrder[n-1]); } };
+  document.addEventListener('keydown', onKey);
+  $('#scrUndo').onclick=()=>{ const s=stack.pop(); if(!s) return; sheet.set(s.cid,sheet.get(s.cid)-1); truth.set(s.truthCid,truth.get(s.truthCid)-1); if(!s.ok) errors--; idx=s.idx; renderRows(); lock=false; show(); };
+  $('#scrAuto').onclick=async()=>{ $('#scrAuto').disabled=true; while(idx<entries.length){ const e=entries[idx]; if(e.double){ idx++; continue; } ensureRow(e.cand); sheet.set(e.cand,(sheet.get(e.cand)||0)+1); truth.set(e.cand,(truth.get(e.cand)||0)+1); stack.push({cid:e.cand,truthCid:e.cand,ok:true,idx}); if(e.cand===S.bergId && sheet.get(e.cand)===need()){ AUDIO.applause(5,0.5); log('Bei der Verlesung erreicht Kardinal Berg die Zweidrittelmehrheit. Beifall.','res'); } idx++; if(idx%4===0){ renderRows(); $('#scrCount').textContent=`Zettel ${idx} von ${entries.length}`; AUDIO.paperTick(); await realSleep(30); } } renderRows(); show(); $('#scrAuto').disabled=false; };
+  const search=$('#nameSearch'), hits=$('#nameHits'); search.value=''; hits.innerHTML='';
+  search.oninput=()=>{ const v=search.value.trim().toLowerCase(); if(v.length<2){ hits.innerHTML=''; return; } const m=COLLEGE.filter(c=>S.present.includes(c.id) && (c.name.toLowerCase().includes(v))).slice(0,8); hits.innerHTML=m.map(c=>`<li tabindex="0" data-c="${c.id}">${esc(c.short)} <span style="color:#6b5a47">– ${esc(c.office)}</span></li>`).join(''); };
+  hits.onclick=e=>{ const li=e.target.closest('li'); if(!li) return; search.value=''; hits.innerHTML=''; strike(+li.dataset.c); };
+  hits.onkeydown=e=>{ if(e.key==='Enter'){ const li=e.target.closest('li'); if(li){ search.value=''; hits.innerHTML=''; strike(+li.dataset.c); } } };
+  segmentReset();
+  show();
+  await done;
+  document.removeEventListener('keydown', onKey); subs('','');
+  /* Wahre Auszählung */
+  const tally=new Map(); entries.forEach(e=>{ if(!e.double) tally.set(e.cand,(tally.get(e.cand)||0)+1); });
+  const nulls = dbl? 2 : 0;
+  /* 3. Revisoren */
+  let mism=0; tally.forEach((v,c)=>{ if((sheet.get(c)||0)!==v) mism++; }); sheet.forEach((v,c)=>{ if(!tally.has(c) && v) mism++; });
+  $('#scrMsg').textContent='Die Revisoren prüfen Ihre Liste und die Notizen der anderen Skrutatoren …';
+  await realSleep(1400);
+  if(mism>0 || errors>0){ auth(-Math.min(8, 2+errors)); log(`Die Revisoren finden Abweichungen in Ihrer Strichliste und berichtigen sie anhand der Notizen der beiden anderen Skrutatoren.`,'bad'); $('#scrMsg').textContent='Die Revisoren haben Ihre Liste berichtigt.'; }
+  else { auth(1); log('Die Revisoren bestätigen Ihre Zählung ohne Abweichung.'); $('#scrMsg').textContent='Die Revisoren bestätigen Ihre Zählung.'; }
+  /* 4. Ergebnis */
+  const sorted=[...tally].sort((a,b)=>b[1]-a[1]);
+  const n2=need();
+  $('#resultBox').innerHTML=`<h3 style="font-family:var(--display);margin-top:14px">Ergebnis</h3><table class="res-table">${sorted.slice(0,10).map(([c,v])=>`<tr><td>${esc(COLLEGE[c].name)}</td><td class="v">${v}</td></tr>`).join('')}${sorted.length>10?`<tr><td>Weitere Namen</td><td class="v">${sorted.slice(10).reduce((s,x)=>s+x[1],0)}</td></tr>`:''}${nulls?`<tr><td>Ungültig</td><td class="v">${nulls}</td></tr>`:''}</table><p style="font-size:14px;color:#6b5a47">Nötig: ${n2} von ${ballots.length} Stimmen.</p><button class="t-btn" id="announce" type="button">Ergebnis verkünden</button>`;
+  segmentReset();
+  await new Promise(r=>$('#announce').onclick=r);
+  AUDIO.click();
+  return {tally, nulls, total:ballots.length};
+}
+function renderStand(){
+  const r=S.results[S.results.length-1]; if(!r) return;
+  const prev=S.results[S.results.length-2];
+  const sorted=[...r.tally].sort((a,b)=>b[1]-a[1]);
+  const top=sorted.slice(0,6); const rest=sorted.slice(6).reduce((s,x)=>s+x[1],0);
+  const n=need(), tot=r.total;
+  const pct=v=>Math.min(100, v/tot*100);
+  let h=`<div class="lbl" style="color:var(--muted);margin-bottom:2px">${r.no}. Wahlgang · ${tot} Stimmen</div>`;
+  top.forEach(([c,v])=>{ const d=prev? v-(prev.tally.get(c)||0) : null; h+=`<div class="bar-row"><span class="n" title="${esc(COLLEGE[c].name)}">${esc(COLLEGE[c].short)}${S.withdrawn[c]>2?' <span class="delta">zurückgez.</span>':''}</span><span class="track"><span class="fill" style="width:${pct(v)}%"></span><span class="need" style="left:${pct(n)}%"></span></span><span class="v">${v}${d!=null?` <span class="delta">${d>0?'+':''}${d}</span>`:''}</span></div>`; });
+  if(rest) h+=`<div class="bar-row"><span class="n">Weitere</span><span class="track"><span class="fill" style="width:${pct(rest)}%;background:#6b5a47"></span></span><span class="v">${rest}</span></div>`;
+  h+=`<p class="stand-note">Goldene Marke: Zweidrittelmehrheit (${n}).</p>`;
+  $('#stand').innerHTML=h;
+}
+
+/* ---------- Ein Wahlgang komplett ---------- */
+async function ballotRound(o){
+  S.ballotNo++; const k=S.ballotNo; S.period++;
+  setStatus({clock:o.clock, phase:`${k}. Wahlgang · Vorbereitung`, ballot:`${k}. Wahlgang`});
+  log(`${k}. Wahlgang beginnt.`,'res');
+  idle('');
+  await distribute(k);
+  await drawLots();
+  await closeForVote();
+  let ballots=[]; let res;
+  const opts={ill:o.ill, mismatch:o.mismatch, double:o.double};
+  while(true){
+    ballots=[];
+    await voting(k, ballots, opts);
+    res = await scrutiny(k, ballots, opts);
+    if(res.redo){ $('#scrut').hidden=true; $('#desk').hidden=false; scrutineersBack(); SIM.pileCount=0; log('Die Zettel werden ungeöffnet verbrannt. Es wird sofort erneut abgestimmt.','dec'); opts.mismatch=false; opts.ill=false; S.present.forEach(id=>AG[id].hasBallot=true); SIM.ballotsOnTables=true; continue; }
+    break;
+  }
+  $('#scrut').hidden=true; $('#desk').hidden=false; scrutineersBack(); SIM.pileCount=0;
+  S.results.push({no:k, tally:res.tally, total:res.total});
+  S.lastTally={}; S.lastTotal=res.total; res.tally.forEach((v,c)=>S.lastTally[c]=v);
+  renderStand();
+  const sorted=[...res.tally].sort((a,b)=>b[1]-a[1]);
+  log(`Ergebnis ${k}. Wahlgang: ${sorted.slice(0,3).map(([c,v])=>`${COLLEGE[c].short} ${v}`).join(', ')}.`,'res');
+  if((res.tally.get(S.bergId)||0)>=need()){ S.elected=true; }
+  /* Bergs Verzicht wirkt nur einen Wahlgang */
+  if(S.bergAsked===1){ S.bergAsked=2; S.withdrawn[S.bergId]=0; S.bonus[S.bergId]=(S.bonus[S.bergId]||0)+0.35; log('Kardinal Bergs Bitte, ihn nicht zu wählen, hat viele beeindruckt.'); }
+  return res;
+}
+function scrutineersBack(){ if(!S.lots) return; S.lots.scr.forEach(id=>{ const a=AG[id]; a.label=null; walk(a,[{x:7,y:GEO.laneBot},{x:GEO.nearestGap(a.seat.x),y:GEO.lane(a.seat.side)},...PATHS.laneToSeat(a.seat).slice(1)]); }); }
+
+/* ---------- Verbrennen, Rauch ---------- */
+async function burn(white){
+  setStatus({phase:'Verbrennen der Zettel'});
+  await task({title:'Zettel und Notizen verbrennen', text:'Alle Zettel dieser Sitzung und die Notizen der Kardinäle kommen in den runden Ofen.', button:'In den Ofen', zone:{x:GEO.stoveA.x,y:GEO.stoveA.y,r:0.9,label:'Rundofen'}, ref:'UDG 70'});
+  const me=AG[S.playerId];
+  await walk(me,[...PATHS.seatToLane(me.seat),{x:30,y:GEO.laneBot},{x:37.6,y:11.0}]);
+  const op = await decide({key:white?'smokeW':'smokeB'+S.ballotNo, title:'Welche Patrone kommt in den zweiten Ofen?', short:white?'Rauchzeichen nach der Wahl':'Rauchzeichen', kicker:'Öfen',
+    body:`<p>Im eckigen Ofen färbt eine Patrone den Rauch. ${white?'Kardinal Berg hat die Wahl angenommen.':'Niemand hat die Zweidrittelmehrheit erreicht.'}</p>`, ref:'UDG 70 · Praxis seit 2005',
+    options:[
+      {label:'Schwarz', sub:'Kaliumperchlorat, Anthracen, Schwefel', ok:!white},
+      {label:'Weiß', sub:'Kaliumchlorat, Laktose, Kolophonium', ok:white},
+    ],
+    objection:{who:kard(BY_KEY.junior.id), text: white? 'Eminenz, der Papst ist gewählt. Die Welt wartet auf weißen Rauch – und auf die Glocken.' : 'Eminenz, es gibt kein Ergebnis. Weißer Rauch würde dem Petersplatz eine Wahl melden, die nicht stattgefunden hat.'}});
+  const isWhite = op.label==='Weiß';
+  if(isWhite!==white) auth(-15);
+  walk(me,[{x:30,y:GEO.laneBot},{x:GEO.nearestGap(me.seat.x),y:GEO.laneBot+(me.seat.side==='top'?-2.9:0)},...PATHS.laneToSeat(me.seat).slice(1)]);
+  const hour = S.clock;
+  const night = parseInt(hour)>=19;
+  AUDIO.setSpace('outdoor');
+  if(isWhite){
+    await showScene(SCN.smoke(night), [
+      {kick:'Petersplatz', title:'Fumata bianca', text: white? 'Weißer Rauch steigt aus dem Kamin der Sixtinischen Kapelle. Wenige Minuten später beginnen die Glocken des Petersdoms zu läuten.' : 'Weißer Rauch! Jubel auf dem Petersplatz – doch die Glocken schweigen. Nach einer halben Stunde korrigiert der Pressesaal: keine Wahl. Ihr Ansehen im Kollegium leidet.', on:svg=>{ SMOKE.start('#f3f0e8', svg.querySelector('#smokeLayer')); AUDIO.crowd(8,'cheer'); if(white) setTimeout(()=>AUDIO.peal(16),2500); }},
+    ]);
+  } else {
+    await showScene(SCN.smoke(night), [
+      {kick:'Petersplatz', title:'Fumata nera', text: white? 'Schwarzer Rauch – obwohl gewählt ist. Unruhe im Kollegium. Eine zweite Patrone, diesmal weiß, folgt eine Viertelstunde später; dann läuten die Glocken.' : 'Schwarzer Rauch über der Sixtinischen Kapelle. Kein Papst. Die Menge auf dem Petersplatz zerstreut sich langsam.', on:svg=>{ SMOKE.start('#1d1b1a', svg.querySelector('#smokeLayer')); AUDIO.crowd(5,'sigh'); if(white) setTimeout(()=>{ SMOKE.color='#f3f0e8'; AUDIO.crowd(7,'cheer'); AUDIO.peal(14); },4500); }},
+    ]);
+  }
+  AUDIO.setSpace('chapel');
+  log(isWhite? 'Fumata bianca.' : 'Fumata nera.', 'res');
+}
+
+/* ---------- Santa Marta ---------- */
+let mingleOn=false;
+async function santaMarta(kind){
+  const label = kind==='dinner'? 'Abendessen' : 'Mittagessen';
+  setStatus({clock: kind==='dinner'?'20:00':'13:00', phase:`Domus Sanctae Marthae · ${label}`, ballot:''});
+  PLAN.setMap('sm'); SIM.doorClosed=false; AUDIO.setSpace('hall'); AUDIO.murmur(0.85);
+  const order = S.present.slice().sort((a,b)=> (COLLEGE[a].region+COLLEGE[a].id).localeCompare(COLLEGE[b].region+COLLEGE[b].id));
+  const seats = GEO.smSeats;
+  order.forEach((id,i)=>{ const a=AG[id]; a.smSeat=seats[i%seats.length]; a.visible=true; teleport(a, 33+rnd()*1.5, 8+rnd()*2); a.label=null; });
+  SIM.agents.forEach(a=>{ if(a.kind!=='card') a.visible=false; });
+  SIM.baseFast=3; SIM.fast=3;
+  await Promise.all(order.map((id,i)=>sleep(i*0.12).then(()=>walk(AG[id],[{x:29,y:9},{x:AG[id].smSeat.x,y:AG[id].smSeat.y}]))));
+  SIM.baseFast=1; segmentReset();
+  mingleOn=true; mingle(order);
+  const clinkT=setInterval(()=>{ if(Math.random()<0.6) AUDIO.clink(); }, 900);
+  log(`${label} in der Domus Sanctae Marthae.`);
+  return ()=>{ mingleOn=false; clearInterval(clinkT); AUDIO.murmur(0); };
+}
+async function mingle(order){
+  while(mingleOn){
+    await sleep(2+rnd()*3);
+    if(!mingleOn) break;
+    const id=pick(order); const a=AG[id]; if(a.moving||a.isPlayer) continue;
+    const other=AG[pick(order)]; if(other===a) continue;
+    const tx=other.smSeat.x+(rnd()-.5)*1.2, ty=other.smSeat.y+(rnd()>.5?0.9:-0.9);
+    walk(a,[{x:tx,y:ty}]).then(()=>sleep(6+rnd()*10)).then(()=>{ if(SIM.map==='sm') walk(a,[{x:a.smSeat.x,y:a.smSeat.y}]); });
+  }
+}
+async function backToChapel(clock, phase){
+  setStatus({clock, phase});
+  PLAN.setMap('chapel'); AUDIO.setSpace('chapel'); SIM.doorClosed=false; SIM.seal=false;
+  SIM.agents.forEach(a=>{ if(a.kind!=='card') a.visible=false; });
+  S.present.forEach(id=>{ const a=AG[id]; a.visible=true; a.alpha=1; teleport(a, 50+rnd()*2.5, 2+rnd()*10); });
+  SIM.baseFast=3; SIM.fast=3;
+  const order=S.present.slice().sort((a,b)=>b-a);
+  await Promise.all(order.map((id,i)=>sleep(i*0.18).then(()=>walk(AG[id], PATHS.entryToSeat(AG[id].seat)))));
+  SIM.baseFast=1; segmentReset();
+}
+
+/* ---------- Ereignisse ---------- */
+async function pactEvent(){
+  const w=BY_KEY.pact.id;
+  await decide({key:'pact', title:`${kard(w)} bittet um ein Wort`, short:'Angebot einer Absprache', kicker:'Am Rand des Abendessens',
+    body:`<p>„Eminenz, unter uns: Ein gutes Dutzend Stimmen aus Nordamerika könnte morgen geschlossen an Berg gehen. Wir bräuchten nur Ihre Zusage, dass Kardinal Hart unter ihm Staatssekretär wird. Sie sind sein Freund – Sie können das einfädeln.“</p>`, ref:'UDG 81–82',
+    options:[
+      {label:'Ablehnen', sub:'„Darüber spreche ich nicht. Wählen Sie nach Ihrem Gewissen.“', ok:true},
+      {label:'Zusagen', sub:'Ein schneller Weg zur Mehrheit', ok:false, effect:()=>{ S.pacts.push('Hart'); S.regionBonus[S.bergId]={NA:1.2}; auth(-12); }},
+    ],
+    objection:{text:'Eminenz, die Konstitution verbietet jede Abmachung, die zur Stimmabgabe verpflichtet. Eine solche Zusage wäre nichtig – und sie würde Sie und Kardinal Berg kompromittieren.'}});
+}
+async function commsEvent(){
+  const c=BY_KEY.comms.id;
+  await decide({key:'comms', title:`${kard(c)} möchte nach Cebu telefonieren`, short:'Kontakt nach außen', kicker:'Domus Sanctae Marthae',
+    body:'<p>Ein Taifun hat in der Nacht seine Erzdiözese getroffen. Er bittet darum, mit seinem Generalvikar zu sprechen, um Hilfe zu koordinieren.</p>', ref:'UDG 44 · 56–57',
+    options:[
+      {label:'Der Sonderkongregation vorlegen', sub:'Camerlengo und drei Assistenten entscheiden; nur Dringendes, kein Wort über die Wahl', ok:true, effect:()=>log('Die Sonderkongregation erlaubt ein kurzes Telefonat unter Aufsicht. Kein Wort über das Konklave.')},
+      {label:'Selbst erlauben', sub:'Es ist ein Notfall', ok:false, effect:()=>auth(-6)},
+      {label:'Ablehnen', sub:'Keine Ausnahmen', ok:true, note:'zulässig, aber hart', effect:()=>log('Kardinal Castañeda nimmt die Absage still hin.')},
+    ],
+    objection:{text:'Eminenz, Ausnahmen von der Abgeschiedenheit kann nur die Sonderkongregation gewähren – aus schwerwiegendem Grund. Ein Taifun ist ein solcher Grund. Aber nicht der Dekan allein entscheidet.'}});
+}
+async function lateEvent(){
+  const l=BY_KEY.late.id;
+  await decide({key:'late', title:`${kard(l)} ist eingetroffen`, short:'Verspäteter Wähler', kicker:'Vor der Sitzung',
+    body:'<p>Nach drei Tagen Anreise über Brisbane und Doha steht der Erzbischof von Port Moresby an der Pforte. Das Konklave läuft bereits. Einige Kardinäle sind dagegen, „mitten im Spiel“ einen weiteren Wähler aufzunehmen.</p>', ref:'UDG 39–40',
+    options:[
+      {label:'Zulassen', sub:'Er leistet den Eid und wählt ab sofort mit', ok:true, effect:()=>{ S.present.push(l); S.present.sort((a,b)=>a-b); AG[l].visible=true; teleport(AG[l],46,6.7); walk(AG[l], PATHS.entryToSeat(AG[l].seat)); meters(); log(`Kardinal Kaupa legt den Eid ab und nimmt am Konklave teil.`); }},
+      {label:'Abweisen', sub:'Das Konklave hat ohne ihn begonnen', ok:false, effect:()=>S.invalid.push('Ein verspätet eingetroffener Wähler wurde abgewiesen (UDG 39).')},
+    ],
+    objection:{text:'Eminenz, Kardinäle, die nach Beginn eintreffen, sind in jedem Stadium des Wahlvorgangs zuzulassen. Ihn abzuweisen, wäre ein Ausschluss.'}});
+}
+async function leakEvent(){
+  await modalChoice({kicker:'Nachrichten von draußen', title:'Ein Leck', body:'<p>Über einen Gendarmen erfahren Sie: Ein Nachrichtenportal veröffentlicht angebliche Zahlen des ersten Wahlgangs. Die Spur führt zum Telefon von Kardinal Kessler, das nie eingezogen wurde. Ihr Ansehen im Kollegium leidet.</p>', options:[{label:'Verstanden'}]});
+  auth(-10); log('Angebliche Ergebnisse sind an die Presse gelangt.','bad');
+}
+async function pactScandal(){
+  await modalChoice({kicker:'Gerüchte', title:'Die Zusage spricht sich herum', body:'<p>Beim Frühstück flüstern Kardinäle über eine „Abmachung zugunsten Bergs“. Mehrere Wähler, die ihm zugeneigt waren, sind verstimmt. Die Zusage ist nach der Konstitution ohnehin nichtig.</p>', options:[{label:'Schweigen'}]});
+  S.regionBonus={}; S.bonus[S.bergId]=(S.bonus[S.bergId]||0)-0.5; auth(-8); log('Die Gerüchte über eine Absprache schaden Berg.','bad');
+}
+
+/* ---------- Hintergrundgespräche ---------- */
+const TALK_LINES = {
+  greet:[ 'Eminenz. Setzen wir uns einen Moment.', 'Sie wollen mit mir sprechen? Gern, aber kurz.', 'Ah, der Dekan. Ich ahne, worum es geht.', 'Ein ruhiger Winkel im Kreuzgang – gut gewählt.' ],
+  yes:[ 'Sie haben recht. Ich werde meinen Freunden sagen, dass sie anders wählen sollen.', 'Ich habe das Amt nie gesucht. Sagen Sie den anderen, sie sollen nicht mehr an mich denken.', 'Wenn es der Einheit dient, trete ich zurück. Beten Sie für mich.' ],
+  maybe:[ 'Lassen Sie mir die Nacht. Ich will darüber beten.', 'Ich höre, was Sie sagen. Ich sage noch nicht ja.', 'Vielleicht. Meine Unterstützer werden mich fragen, warum.' ],
+  no:[ 'Bei allem Respekt, Eminenz: Das entscheidet nicht der Dekan.', 'Ich habe nicht kandidiert und ich ziehe nichts zurück. Der Geist weht, wo er will.', 'Nein. Und ich wäre dankbar, wenn wir das Gespräch hier beenden.' ],
+};
+const APPROACHES = [
+  {key:'unitas', label:'Um der Einheit willen', sub:'Wirkt bei Kandidaten mit wenigen Stimmen und viel Demut.'},
+  {key:'numeri', label:'Offen über die Zahlen', sub:'Wirkt, wenn seine Stimmen stagnieren.'},
+  {key:'onus', label:'Die Last des Amtes', sub:'Wirkt bei älteren Kandidaten.'},
+  {key:'promissio', label:'Ein Amt in Aussicht stellen', sub:'Sehr wirksam – und nach Nr. 81 verboten.', illicit:true},
+];
+function portrait(cid){ const c=COLLEGE[cid]; const hue = ['#e0bf98','#c99a72','#8d5a3b','#6b4430','#d8b08a'][cid%5]; return `<svg class="portrait" viewBox="0 0 64 64"><rect width="64" height="64" fill="#2c4a70"/><path d="M8 64 Q10 42 32 40 Q54 42 56 64 Z" fill="#a3262a"/><path d="M16 50 Q32 40 48 50 L46 56 Q32 50 18 56 Z" fill="#741a1e"/><circle cx="32" cy="27" r="11" fill="${hue}"/><path d="M22 23 A10 10 0 0 1 42 23 Z" fill="#a3262a"/>${c.age>66?`<path d="M23 31 Q32 36 41 31" stroke="#fff" stroke-width="1" opacity=".5" fill="none"/>`:''}</svg>`; }
+function candStatus(cid){ const w=S.withdrawn[cid]||0; if(cid===S.bergId && S.bergAsked===1) return ['zurückhaltend','wav']; if(w>2) return ['zurückgezogen','out']; if(w>0) return ['zögert','wav']; return ['im Gespräch','']; }
+function openTalk(pre){
+  if(!$('#modal').hidden || !$('#scene').hidden) return;
+  const list=PAP_IDS.filter(id=>S.present.includes(id));
+  let cur = pre!=null && list.includes(pre)? pre : list.slice().sort((a,b)=>(lastVotes(b)||0)-(lastVotes(a)||0))[0];
+  const d=openModal(`<button class="close" type="button" aria-label="Schließen">×</button><div class="kicker">Hintergrundgespräch</div><h3>Wen wollen Sie sprechen?</h3><div class="talk"><div class="cand-list"></div><div class="talk-main"></div></div>`, true);
+  d.querySelector('.close').onclick=()=>closeModal();
+  const renderList=()=>{ d.querySelector('.cand-list').innerHTML=list.map(id=>{ const st=candStatus(id); const lv=lastVotes(id); return `<button class="cand" type="button" data-c="${id}" aria-current="${id===cur}"><span>${esc(COLLEGE[id].short)}</span><span class="v">${lv!=null?lv:'–'}</span><span class="s"><span class="pill ${st[1]}">${st[0]}</span> ${esc(COLLEGE[id].country)}, ${COLLEGE[id].age}</span></button>`; }).join(''); d.querySelectorAll('.cand').forEach(b=>b.onclick=()=>{ cur=+b.dataset.c; renderList(); renderMain(); }); };
+  const renderMain=(outcome)=>{
+    const c=COLLEGE[cur]; const st=candStatus(cur); const talked = S.talkPeriod[cur]===S.period;
+    let h=`<div class="who">${portrait(cur)}<div><div style="font-size:19px;font-weight:500">Kardinal ${esc(c.name)}</div><div style="color:#6b5a47;font-size:14px">${esc(c.office)} · ${c.age} Jahre</div></div></div>`;
+    h+=`<p style="font-size:15px;margin:10px 0 0">${c.pap.profile}</p>`;
+    const r=S.results; if(r.length){ h+=`<p style="font-size:13.5px;color:#6b5a47;margin:4px 0 0">Stimmen bisher: ${r.map(x=>x.tally.get(cur)||0).join(' · ')}</p>`; }
+    if(outcome){ h+=`<div class="quote">„${outcome}“</div>`; }
+    else if(st[1]==='out'){ h+=`<div class="quote">„Ich habe meinen Freunden gesagt, was zu sagen war. Mehr kann ich nicht tun.“</div>`; }
+    else if(talked){ h+=`<div class="quote">„Wir haben doch eben erst gesprochen, Eminenz.“</div><p style="font-size:13.5px;color:#6b5a47">Ein weiteres Gespräch ist nach dem nächsten Wahlgang möglich.</p>`; }
+    else {
+      h+=`<div class="quote">„${cur===S.bergId? 'Raffaele … wie lange kennen wir uns jetzt? Sag, was du auf dem Herzen hast.' .replace('Raffaele', esc(COLLEGE[S.playerId].name.split(' ')[0])) : TALK_LINES.greet[cur%TALK_LINES.greet.length]}“</div>`;
+      h+=`<div class="approach">${APPROACHES.map(a=>`<button class="opt ${a.illicit?'illicit':''}" type="button" data-a="${a.key}"><b>${a.label}</b><span>${a.sub}</span></button>`).join('')}</div>`;
+      h+=`<p style="font-size:13px;color:#6b5a47;margin-top:10px">Formal kandidiert niemand. Wer zurücktritt, bittet seine Unterstützer, andere zu wählen.</p>`;
+    }
+    d.querySelector('.talk-main').innerHTML=h;
+    d.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>doTalk(cur, b.dataset.a));
+  };
+  const doTalk=(cid, ap)=>{
+    const c=COLLEGE[cid]; const k=S.ballotNo; const tot=S.lastTotal||1; const s=(lastVotes(cid)||0)/tot;
+    const prev=S.results.length>1? (S.results[S.results.length-2].tally.get(cid)||0) : null; const trend = prev==null? 0 : (lastVotes(cid)||0)-prev;
+    const stub = c.pap.stub + (S.talkFail[cid]||0)*0.12 - ((S.withdrawn[cid]||0)>0 && S.withdrawn[cid]<2 ? 0.15 : 0);
+    const a = (S.authority-60)/220;
+    let p;
+    if(ap==='unitas') p = 0.48 - 0.45*stub - 0.9*s + 0.04*k + a;
+    else if(ap==='numeri') p = S.results.length? 0.28 + (trend<=0?0.32:-0.12) - 1.3*Math.max(0,s-0.12) - 0.25*stub + a : -0.2;
+    else if(ap==='onus') p = (c.age-58)/30 - 0.25*stub + a;
+    else p = 0.82 + a;
+    S.talkPeriod[cid]=S.period;
+    if(ap==='promissio'){ auth(-14); S.pacts.push(c.short); S.decisions.push({key:'promise'+cid, title:`Versprechen an Kardinal ${c.short}`, label:'Amt in Aussicht gestellt', ok:false, ref:'UDG 81'}); log(`Sie stellen Kardinal ${c.short} ein Amt in Aussicht. Eine verbotene Absprache.`,'bad'); }
+    const roll=rnd(); let out;
+    if(cid===S.bergId){
+      if(roll<p+0.1){ out = 'Du hast recht. Ich will es nicht. Ich bitte meine Freunde, mich nicht mehr zu wählen. Aber wenn sie es dennoch tun …'; S.withdrawn[cid]=1.6; S.bergAsked=1; log('Kardinal Berg bittet seine Unterstützer, ihn nicht zu wählen.','dec'); }
+      else { out = 'Ich strebe nichts an. Aber ich laufe auch nicht davon, wenn die Brüder mich rufen. Lass es den Geist entscheiden.'; S.talkFail[cid]=(S.talkFail[cid]||0)+1; }
+    } else if(roll<p){ out=TALK_LINES.yes[cid%3]; S.withdrawn[cid]=2.6; log(`Kardinal ${c.short} bittet seine Unterstützer, andere zu wählen.`,'dec'); const ag=AG[cid]; ag.withdrawn=true; }
+    else if(roll<p+0.22){ out=TALK_LINES.maybe[cid%3]; S.withdrawn[cid]=Math.max(S.withdrawn[cid]||0,0.8); log(`Kardinal ${c.short} will über Ihr Gespräch nachdenken.`); }
+    else { out=TALK_LINES.no[cid%3]; S.talkFail[cid]=(S.talkFail[cid]||0)+1; auth(-1); log(`Kardinal ${c.short} lehnt ab.`); }
+    renderList(); renderMain(out);
+  };
+  renderList(); renderMain();
+}
+
+/* ---------- Annahme und Verkündigung ---------- */
+async function acceptance(){
+  setStatus({phase:'Annahme der Wahl'});
+  AUDIO.applause(4,0.4);
+  await task({title:'Sekretär und Zeremonienmeister rufen lassen', text:'Der jüngste Kardinaldiakon öffnet die Tür für den Sekretär des Kollegiums und den Zeremonienmeister. Sie sind Zeugen der Annahme.', button:'Rufen lassen', ref:'UDG 87'});
+  SIM.doorClosed=false; AUDIO.door();
+  const sec=mkExtra('staff', 44, 6.7); sec.visible=true; const mc=S.mcs[0]; mc.visible=true; mc.alpha=1; teleport(mc,45,6.7);
+  walk(sec,[{x:41.6,y:6.7},{x:30,y:6.7},{x:5.6,y:4.4}]); walk(mc,[{x:41.6,y:6.7},{x:30,y:6.7},{x:6.2,y:4.4}]);
+  const b=AG[S.bergId];
+  await task({title:'Zu Kardinal Berg gehen', text:'Als Dekan stellen Sie dem Gewählten im Namen des ganzen Kollegiums die Frage, ob er annimmt.', button:'Zu Berg gehen', agent:S.bergId, ref:'UDG 87'});
+  const me=AG[S.playerId];
+  await walk(me,[...PATHS.seatToLane(me.seat),{x:GEO.nearestGap(b.seat.x),y:GEO.lane(b.seat.side)},{x:b.seat.x+0.5,y:GEO.lane(b.seat.side)}]);
+  b.label='Berg';
+  await showScene(SCN.chapel({accept:true}), [
+    {kick:'Cappella Sistina', title:'Die Frage', text:`Sie treten vor Kardinal Berg. Es ist still in der Kapelle.`, lat:TXT.accept[0], de:TXT.accept[1]},
+    {kick:'Cappella Sistina', title:'Carl Berg', text:'Er schließt kurz die Augen.', lat:TXT.accepto[0], de:TXT.accepto[1], on:()=>AUDIO.applause(4,0.35)},
+    {kick:'Cappella Sistina', title:'Der Name', lat:TXT.quoNomine[0], de:TXT.quoNomine[1]},
+    {kick:'Cappella Sistina', title:'Franziskus II.', text:'„In Erinnerung an Franz von Assisi – und an Papst Franziskus, den Papst meiner Kindheit. Er hat uns an die Ränder geschickt.“', lat:TXT.vocabor[0], de:TXT.vocabor[1], on:()=>AUDIO.applause(5,0.45)},
+  ]);
+  log('Kardinal Berg nimmt die Wahl an und nennt sich Franziskus II.','res');
+  if(S.invalid.length) return false;
+  log('Der Zeremonienmeister fertigt als Notar die Urkunde über Annahme und Namen aus.');
+  walk(me,[{x:GEO.nearestGap(b.seat.x),y:GEO.lane(b.seat.side)},...PATHS.laneToSeat(me.seat).slice(1)]);
+  return true;
+}
+async function nullity(){
+  await showScene(SCN.chapel(), [
+    {kick:'Einspruch', title:kard(BY_KEY.canonist.id), text:`„Eminenz, ich muss widersprechen, bevor die Welt diesen Namen hört. Diese Wahl ist nach Nummer 76 der Konstitution null und nichtig.“`},
+    {kick:'Die Gründe', title:'Universi Dominici Gregis, Nr. 76', text: S.invalid.map(x=>'· '+esc(x)).join('<br>')},
+    {kick:'Ende', title:'Kein weißer Rauch', text:'Carl Berg legt die Hände in den Schoß. „Dann eben noch einmal, Brüder. Richtig diesmal.“ Das Konklave muss von vorn beginnen.', next:'Zur Bilanz'},
+  ]);
+}
+async function afterElection(){
+  await burn(true);
+  await showScene(SCN.tears(), [
+    {kick:'Raum der Tränen', title:'Die weiße Soutane', text:'Neben der Sakristei liegen drei Soutanen bereit: klein, mittel, groß. Franziskus II. bleibt einige Minuten allein. Dann wählt er die mittlere.'},
+  ]);
+  setStatus({phase:'Gehorsamsbezeugung'});
+  const b=AG[S.bergId]; b.white=true; b.kind='pope'; b.label='Franziskus II.';
+  await walk(b,[...PATHS.seatToLane(b.seat),{x:6,y:GEO.lineY},{x:3.4,y:GEO.lineY}]);
+  AUDIO.organ(true,0.45);
+  await task({title:'Gehorsam bezeugen', text:'Sie und alle Kardinäle treten einzeln vor den neuen Papst.', button:'Vortreten', ref:'UDG 88'});
+  const q=new Queue(async a=>{ await walk(a,[{x:4.1,y:GEO.lineY}]); a.kneel=1; await sleep(a.isPlayer?2.5:0.6); a.kneel=0; });
+  SIM.queues.push(q);
+  const all=[]; SIM.baseFast=2; SIM.fast=2;
+  for(const id of S.present.filter(x=>x!==S.bergId).sort((a,c)=>a-c)){ const a=AG[id]; while(q.list.length>=6) await sleep(0.3); all.push((async()=>{ await walk(a, PATHS.seatToLane(a.seat)); await q.join(a); await walk(a,[{x:4.6,y:GEO.lane(a.seat.side)},{x:GEO.nearestGap(a.seat.x),y:GEO.lane(a.seat.side)},...PATHS.laneToSeat(a.seat).slice(1)]); })()); await sleep(0.6); }
+  await Promise.all(all); SIM.queues=SIM.queues.filter(x=>x!==q); SIM.baseFast=1; segmentReset();
+  AUDIO.organ(false);
+}
+async function loggia(){
+  setStatus({phase:'Benediktionsloggia des Petersdoms'});
+  AUDIO.setSpace('outdoor');
+  const P=TXT.habemus;
+  await showScene(SCN.loggia(), [
+    {kick:'Petersplatz', title:'Die Loggia', text:'Eine Stunde nach dem weißen Rauch. Auf dem Platz drängen sich Zehntausende. Hinter dem roten Vorhang bewegt sich etwas.', on:()=>{ AUDIO.crowd(6,'cheer'); }},
+    {kick:'Kardinalprotodiakon', title:kard(BY_KEY.protodeacon.id), text:'Der Vorhang öffnet sich.', lat:P[0][0], de:P[0][1], on:svg=>{ svg.querySelector('#curtain').style.opacity=0; svg.querySelector('#loggiaLight').style.opacity=1; svg.querySelector('#protodeacon').style.opacity=1; }},
+    {kick:'Kardinalprotodiakon', title:'Habemus Papam', lat:P[1][0], de:P[1][1], on:()=>AUDIO.crowd(7,'cheer'), auto:7000},
+    {kick:'Kardinalprotodiakon', title:'', lat:P[2][0], de:P[2][1], auto:4500},
+    {kick:'Kardinalprotodiakon', title:'', lat:P[3][0], de:P[3][1], auto:4500},
+    {kick:'Kardinalprotodiakon', title:'', lat:P[4][0], de:P[4][1], on:()=>AUDIO.crowd(4,'cheer'), auto:5000},
+    {kick:'Kardinalprotodiakon', title:'Franziskus II.', lat:P[5][0], de:P[5][1], on:svg=>{ AUDIO.crowd(9,'cheer'); svg.querySelector('#tapArms').style.opacity=1; svg.querySelector('#tapPlain').style.opacity=0; }},
+    {kick:'Papst Franziskus II.', title:'„Fratelli e sorelle, buonasera.“', text:'„Brüder und Schwestern, guten Abend. Der Herr hat uns gesagt: Geht an die Ränder. Dort wartet er auf uns – und auf euch. Betet für mich. Und betet für meinen alten Freund Nikolaus.“', on:svg=>{ svg.querySelector('#protodeacon').style.opacity=0; svg.querySelector('#popeFig').style.opacity=1; AUDIO.crowd(8,'cheer'); AUDIO.peal(12); }},
+    {kick:'Wahlspruch', title:TXT.motto[0], text:TXT.motto[1]+' Das Wappen verbindet die roten Balken Oldenburgs mit dem Tau des heiligen Franziskus, auf blauem Grund für die Ränder der Welt.'},
+    {kick:'Urbi et Orbi', title:'Der erste Segen', lat:TXT.benedictio[0], de:TXT.benedictio[1], on:()=>{ setTimeout(()=>AUDIO.crowd(10,'cheer'),3500); setTimeout(()=>AUDIO.peal(18),4200); }, next:'Bilanz'},
+  ]);
+}
+function epilogue(valid){
+  const d=S.decisions;
+  const rows=d.map(x=>`<tr><td>${esc(x.title)}<br><span style="color:#6b5a47;font-size:13px">${esc(x.label)}${x.revised?' (nach Einspruch revidiert)':''}${x.note?' · '+esc(x.note):''}</span></td><td>${x.ref||''}</td><td class="${x.ok?'okk':'bad'}">${x.ok?'regelkonform':'Verstoß'}</td></tr>`).join('');
+  const ok=d.filter(x=>x.ok).length;
+  const html=`<div class="epi"><div class="kicker">${valid?'Habemus Papam':'Wahl nichtig'}</div><h3>${valid?'Franziskus II. ist gewählt':'Das Konklave beginnt von vorn'}</h3>
+  <div class="body"><p>${valid? `Carl Berg wurde im ${S.ballotNo}. Wahlgang gewählt, am ${DAYS[S.day-1]}. ` : 'Die Wahl war nach Nr. 76 der Konstitution null und nichtig. '}Sie haben ${ok} von ${d.length} Entscheidungen nach den Regeln getroffen. Ihre Autorität im Kollegium: ${Math.round(S.authority)} von 100.${S.pacts.length?` Verbotene Absprachen: ${S.pacts.length}.`:''}</p></div>
+  <table>${rows}</table><div class="opts"><button class="opt" id="again" type="button"><b>Noch einmal</b><span>Neues Konklave, Sie überspringen die Einführung.</span></button></div></div>`;
+  openModal(html, true);
+  $('#again').onclick=()=>{ try{ localStorage.setItem('konklave-quick','1'); }catch(e){} location.reload(); };
+}
+
+/* ---------- Hauptablauf ---------- */
+async function main(){
+  initAgents();
+  PLAN.init($('#plan'));
+  setupPlanInput();
+  let quickPref=false; try{ quickPref = localStorage.getItem('konklave-quick')==='1'; localStorage.removeItem('konklave-quick'); }catch(e){}
+  if(quickPref){ $('#btnQuick').textContent='Direkt zur Prozession (empfohlen)'; }
+  idle('Das Konklave hat noch nicht begonnen.');
+  await titleScreen();
+  if(!S.quick){ await prolog(); await generalCongregation(); await missa(); }
+  else { S.homily='unitas'; log('Kurzstart: Generalkongregationen und Messe sind vorüber.'); }
+  await procession();
+  await veni();
+  await oath();
+  await extraOmnes();
+  await phoneEvent();
+  /* Erster Tag: ein Wahlgang */
+  S.sessionKey='d1pm';
+  await ballotRound({clock:'18:10'});
+  setStatus({clock:'19:30'}); await burn(false);
+  let day=1;
+  while(!S.elected){
+    /* Abend */
+    let end=await santaMarta('dinner');
+    if(day===1) await pactEvent();
+    if(day===2) { await commsEvent(); if(S.phoneIgnored) await leakEvent(); }
+    if(day===2 && S.pacts.includes('Hart') && rnd()<0.6) await pactScandal();
+    await task({title:'Nachtruhe', text:'Nutzen Sie den Abend für Hintergrundgespräche. Klicken Sie im Saal auf einen Kardinal oder öffnen Sie oben das Gesprächsfenster.', button:'Zur Nachtruhe'});
+    end(); day++;
+    S.period++;
+    if(day===4 && !S.elected){ setStatus({day, clock:'9:00', phase:'Tag der Besinnung'}); await modalChoice({kicker:'Nach drei Tagen ohne Ergebnis', title:'Ein Tag des Gebets', body:`<p>Die Konstitution sieht nach drei Tagen ohne Wahl eine Pause von höchstens einem Tag vor: Gebet, freier Austausch unter den Wählern und eine kurze geistliche Ansprache des ersten Kardinaldiakons, ${kard(BY_KEY.protodeacon.id)}.</p>`, ref:'UDG 74', options:[{label:'Den Tag dem Gebet widmen'}]}); log('Ein Tag des Gebets und der Besinnung.'); S.period++; S.bonus[S.bergId]=(S.bonus[S.bergId]||0)+0.2; day++; }
+    S.day=day;
+    /* Vormittag */
+    await backToChapel('9:15', 'Die Wähler kehren in die Sixtina zurück');
+    if(day===2) await lateEvent();
+    S.sessionKey=`d${day}am`;
+    await ballotRound({clock:'9:30', double: S.ballotNo===1});
+    if(S.elected) break;
+    await ballotRound({clock:'10:45', mismatch: S.ballotNo===2});
+    if(S.elected) break;
+    setStatus({clock:'12:00'}); await burn(false);
+    end=await santaMarta('lunch');
+    await task({title:'Zurück in die Sixtina', text:'Auch beim Mittagessen sind Gespräche möglich.', button:'Mittagspause beenden'});
+    end();
+    S.period++;
+    await backToChapel('15:45', 'Die Wähler kehren in die Sixtina zurück');
+    S.sessionKey=`d${day}pm`;
+    await ballotRound({clock:'16:00', ill: day===2});
+    if(S.elected) break;
+    await ballotRound({clock:'17:15'});
+    if(S.elected) break;
+    setStatus({clock:'19:00'}); await burn(false);
+  }
+  const ok = await acceptance();
+  if(!ok){ await nullity(); epilogue(false); return; }
+  await afterElection();
+  await loggia();
+  epilogue(true);
+}
+
+/* ---------- Bedienelemente ---------- */
+function setupControls(){
+  document.querySelectorAll('[data-speed]').forEach(b=>b.onclick=()=>{ SIM.speed=+b.dataset.speed; document.querySelectorAll('[data-speed]').forEach(x=>x.setAttribute('aria-pressed', x===b?'true':'false')); });
+  $('#btnSkip').onclick=()=>{ SIM.fast=14; $('#btnSkip').setAttribute('aria-pressed','true'); };
+  $('#btnSound').onclick=()=>{ AUDIO.init(); const m=!AUDIO.isMuted(); AUDIO.setMuted(m); $('#btnSound').textContent=m?'Ton an':'Ton aus'; $('#btnSound').setAttribute('aria-pressed', m?'true':'false'); };
+  $('#btnRules').onclick=()=>{ if(!$('#modal').hidden) return; const d=openModal(`<button class="close" type="button" aria-label="Schließen">×</button><div class="kicker">Universi Dominici Gregis · Kurzfassung</div><h3>Regelwerk</h3><div class="rules">${RULES.map(r=>`<div><b>${r[0]}</b> <span class="ref">${r[2]}</span><br>${r[1]}</div>`).join('')}</div>`, true); d.querySelector('.close').onclick=closeModal; };
+  $('#btnTalk').onclick=()=>openTalk();
+  $('#papToggle').onchange=e=>{ SIM.showPap=e.target.checked; };
+  document.addEventListener('keydown', e=>{ if(e.key==='Escape' && !$('#modal').hidden && $('#modal .close')) closeModal(); });
+  window.addEventListener('resize', ()=>PLAN.resize());
+  let last=performance.now();
+  const frame=t=>{ const dt=Math.min(0.05,(t-last)/1000); last=t; simUpdate(dt); PLAN.draw(); requestAnimationFrame(frame); };
+  requestAnimationFrame(frame);
+}
+document.fonts && document.fonts.ready.then(()=>PLAN.resize && PLAN.resize());
+setupControls();
+main();
+</script>
+</body>
+</html>
